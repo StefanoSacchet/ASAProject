@@ -1,0 +1,5 @@
+First challenge May 7th:
+    - Move when no parcel sensed
+    - Deliver parcels once taken
+    - Path planning
+    - Order intentions based on priority
