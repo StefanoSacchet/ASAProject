@@ -2,7 +2,7 @@ import { DeliverooApi } from "@unitn-asa/deliveroo-js-client";
 
 const client = new DeliverooApi(
     "http://localhost:8080",
-    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjQ5ZDU1ZjE5NGNjIiwibmFtZSI6InN0ZSIsImlhdCI6MTcxMzYyNTcyN30.IhbhqruK54Z5BGsIxidkZMk8cxj9-qP2CanXJPiswBw"
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjgzYzRmOWUxY2NjIiwibmFtZSI6InN0ZSIsImlhdCI6MTcxMzg2MzIyMn0.jbB1vynlgTnTsTAA_TmPWhfor4-orX5lhPmErv_afZU"
 );
 
 function distance({ x: x1, y: y1 }, { x: x2, y: y2 }) {
@@ -14,7 +14,7 @@ function distance({ x: x1, y: y1 }, { x: x2, y: y2 }) {
 /**
  * Beliefset revision function
  */
-const me = {};
+const me = { carrying: new Map() };
 client.onYou(({ id, name, x, y, score }) => {
     me.id = id;
     me.name = name;
@@ -27,9 +27,47 @@ client.onParcelsSensing(async (perceived_parcels) => {
     for (const p of perceived_parcels) {
         parcels.set(p.id, p);
     }
+
+    //TODO don't remove not expiered parcels
+    // remove expiered parcels
+    for (const [id, parcel] of parcels.entries()) {
+        if (!perceived_parcels.find((p) => p.id === id)) {
+            parcels.delete(id);
+            me.carrying.delete(id);
+        }
+    }
 });
+
+let PARCEL_REWARD_AVG;
 client.onConfig((param) => {
-    // console.log(param);
+    PARCEL_REWARD_AVG = param.PARCEL_REWARD_AVG;
+});
+
+function nearestDelivery({ x, y }) {
+    return Array.from(map.tiles.values())
+        .filter(({ delivery }) => delivery)
+        .sort((a, b) => distance(a, { x, y }) - distance(b, { x, y }))[0];
+}
+
+// store map
+const map = {
+    width: undefined,
+    height: undefined,
+    tiles: new Map(),
+    add: function (tile) {
+        const { x, y } = tile;
+        return this.tiles.set(x + 1000 * y, tile);
+    },
+    xy: function (x, y) {
+        return this.tiles.get(x + 1000 * y);
+    },
+};
+client.onMap((width, height, tiles) => {
+    map.width = width;
+    map.height = height;
+    for (const t of tiles) {
+        map.add(t);
+    }
 });
 
 /**
@@ -37,6 +75,16 @@ client.onConfig((param) => {
  */
 client.onParcelsSensing((parcels) => {
     // TODO revisit beliefset revision so to trigger option generation only in the case a new parcel is observed
+
+    let carriedQty = me.carrying.size;
+    const TRESHOLD = (carriedQty * PARCEL_REWARD_AVG) / 2;
+    let carriedReward = Array.from(me.carrying.values()).reduce((acc, parcel) => acc + parcel.reward, 0);
+
+    // go deliver
+    if (carriedReward > TRESHOLD && TRESHOLD !== 0) {
+        myAgent.push(["go_deliver"]);
+        return;
+    }
 
     /**
      * Options generation
@@ -65,7 +113,9 @@ client.onParcelsSensing((parcels) => {
     /**
      * Best option is selected
      */
-    if (best_option) myAgent.push(best_option);
+    if (best_option) {
+        myAgent.push(best_option);
+    } else myAgent.push(["patrolling"]);
 });
 // client.onAgentsSensing( agentLoop )
 // client.onYou( agentLoop )
@@ -315,17 +365,18 @@ class GoPickUp extends Plan {
         return go_pick_up == "go_pick_up";
     }
 
-    async execute(go_pick_up, x, y) {
+    async execute(go_pick_up, x, y, id) {
         if (this.stopped) throw ["stopped"]; // if stopped then quit
         await this.subIntention(["go_to", x, y]);
         if (this.stopped) throw ["stopped"]; // if stopped then quit
         await client.pickup();
         if (this.stopped) throw ["stopped"]; // if stopped then quit
+        me.carrying.set(id, parcels.get(id));
         return true;
     }
 }
 
-class BlindMove extends Plan {
+class GoTo extends Plan {
     static isApplicableTo(go_to, x, y) {
         return go_to == "go_to";
     }
@@ -373,6 +424,44 @@ class BlindMove extends Plan {
     }
 }
 
+class Patrolling extends Plan {
+    static isApplicableTo(patrolling) {
+        return patrolling == "patrolling";
+    }
+
+    async execute(patrolling) {
+        if (this.stopped) throw ["stopped"]; // if stopped then quit
+        let i = Math.round(Math.random() * map.tiles.size);
+        let tile = Array.from(map.tiles.values()).at(i);
+        if (tile) await this.subIntention(["go_to", tile.x, tile.y]);
+        if (this.stopped) throw ["stopped"]; // if stopped then quit
+        return true;
+    }
+}
+
+class GoDeliver extends Plan {
+    static isApplicableTo(go_deliver) {
+        return go_deliver == "go_deliver";
+    }
+
+    async execute(go_deliver) {
+        let deliveryTile = nearestDelivery(me);
+
+        await this.subIntention(["go_to", deliveryTile.x, deliveryTile.y]);
+        if (this.stopped) throw ["stopped"]; // if stopped then quit
+
+        await client.putdown();
+        if (this.stopped) throw ["stopped"]; // if stopped then quit
+
+        // empty carrying
+        me.carrying.clear();
+
+        return true;
+    }
+}
+
 // plan classes are added to plan library
 planLibrary.push(GoPickUp);
-planLibrary.push(BlindMove);
+planLibrary.push(GoTo);
+planLibrary.push(Patrolling);
+planLibrary.push(GoDeliver);

@@ -1,5 +1,10 @@
 First challenge May 7th:
-    - Move when no parcel sensed
-    - Deliver parcels once taken
-    - Path planning
-    - Order intentions based on priority
+    - Move when no parcel sensed:
+        * move away from other agents
+    - Deliver parcels once taken:
+        * maybe change intentions while delivering
+    - Path planning:
+        * change "go_to"
+    - Order intentions based on priority:
+        * check if other agents are closer than us
+    - Fine tune treshold
