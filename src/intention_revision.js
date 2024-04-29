@@ -74,14 +74,23 @@ client.onYou(({ id, name, x, y, score }) => {
 client.onAgentsSensing((agents) => {
     if (!matrix && !graph) return;
 
-    // recompute matrix for A* with agents
+    let matrix_changed = false;
+
+    // change back to 1 where there is a tile
+    map.tiles.forEach((tile) => {
+        matrix[tile.x][tile.y] = 1;
+        matrix_changed = true;
+    });
+    // remove tiles where there is an agent
     agents.forEach((agent) => {
+        //TODO handle agents with x and y not integers
         // check if agent.x and agent.y are integers
         if (!Number.isInteger(agent.x) || !Number.isInteger(agent.y)) return;
-
         matrix[agent.x][agent.y] = 0;
+        matrix_changed = true;
     });
-    graph = new Graph(matrix);
+
+    if (matrix_changed) graph = new Graph(matrix);
 });
 
 client.onParcelsSensing(async (perceived_parcels) => {
@@ -103,8 +112,14 @@ client.onParcelsSensing(async (perceived_parcels) => {
 /**
  * Options generation and filtering function
  */
-client.onParcelsSensing((parcels) => {
+client.onParcelsSensing((perceived_parcels) => {
     // TODO revisit beliefset revision so to trigger option generation only in the case a new parcel is observed
+    // let new_parcel_sensed = false;
+    // for (const p of perceived_parcels) {
+    //     if (!parcels.has(p.id)) new_parcel_sensed = true; // new parcel sensed
+    //     parcels.set(p.id, p); // update perceived parcels
+    // }
+    // if (!new_parcel_sensed) return;
 
     let carriedQty = me.carrying.size;
     // const TRESHOLD = (carriedQty * PARCEL_REWARD_AVG) / 2;
@@ -121,7 +136,7 @@ client.onParcelsSensing((parcels) => {
      * Options generation
      */
     const options = [];
-    for (const parcel of parcels.values())
+    for (const parcel of perceived_parcels.values())
         if (!parcel.carriedBy) options.push(["go_pick_up", parcel.x, parcel.y, parcel.id]);
     // myAgent.push( [ 'go_pick_up', parcel.x, parcel.y, parcel.id ] )
 
@@ -144,9 +159,8 @@ client.onParcelsSensing((parcels) => {
     /**
      * Best option is selected
      */
-    if (best_option) {
-        myAgent.push(best_option);
-    } else myAgent.push(["patrolling"]);
+    if (best_option) myAgent.push(best_option);
+    else myAgent.push(["patrolling"]);
 });
 // client.onAgentsSensing( agentLoop )
 // client.onYou( agentLoop )
@@ -183,6 +197,8 @@ class GoTo extends Plan {
 
     async execute(go_to, x, y) {
         while (me.x != x || me.y != y) {
+            if (this.stopped) throw ["stopped"]; // if stopped then quit
+
             const start = graph.grid[me.x][me.y];
             const end = graph.grid[x][y];
             const res = astar.search(graph, start, end); // A* search
