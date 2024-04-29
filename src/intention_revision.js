@@ -37,6 +37,9 @@ let graph;
 // used to compute threshold
 let PARCEL_REWARD_AVG;
 
+// map matrix
+var matrix;
+
 client.onConfig((param) => {
     PARCEL_REWARD_AVG = param.PARCEL_REWARD_AVG;
 });
@@ -50,7 +53,7 @@ client.onMap((width, height, tiles) => {
     }
 
     // create graph for A*
-    let matrix = Array(height)
+    matrix = Array(height)
         .fill()
         .map(() => Array(width).fill(0));
     // fill in ones where there is a tile
@@ -66,6 +69,19 @@ client.onYou(({ id, name, x, y, score }) => {
     me.x = x;
     me.y = y;
     me.score = score;
+});
+
+client.onAgentsSensing((agents) => {
+    if (!matrix && !graph) return;
+
+    // recompute matrix for A* with agents
+    agents.forEach((agent) => {
+        // check if agent.x and agent.y are integers
+        if (!Number.isInteger(agent.x) || !Number.isInteger(agent.y)) return;
+
+        matrix[agent.x][agent.y] = 0;
+    });
+    graph = new Graph(matrix);
 });
 
 client.onParcelsSensing(async (perceived_parcels) => {
@@ -91,7 +107,8 @@ client.onParcelsSensing((parcels) => {
     // TODO revisit beliefset revision so to trigger option generation only in the case a new parcel is observed
 
     let carriedQty = me.carrying.size;
-    const TRESHOLD = (carriedQty * PARCEL_REWARD_AVG) / 2;
+    // const TRESHOLD = (carriedQty * PARCEL_REWARD_AVG) / 2;
+    const TRESHOLD = PARCEL_REWARD_AVG / 2;
     let carriedReward = Array.from(me.carrying.values()).reduce((acc, parcel) => acc + parcel.reward, 0);
 
     // go deliver
@@ -165,20 +182,24 @@ class GoTo extends Plan {
     }
 
     async execute(go_to, x, y) {
-        const start = graph.grid[me.x][me.y];
-        const end = graph.grid[x][y];
-        const res = astar.search(graph, start, end); // A* search
+        while (me.x != x || me.y != y) {
+            const start = graph.grid[me.x][me.y];
+            const end = graph.grid[x][y];
+            const res = astar.search(graph, start, end); // A* search
 
-        // move to each node in the path
-        for (let i = 0; i < res.length; i++) {
-            if (this.stopped) throw ["stopped"]; // if stopped then quit
-            let next = res[i];
-            if (next.x > me.x) await client.move("right");
-            else if (next.x < me.x) await client.move("left");
-            if (next.y > me.y) await client.move("up");
-            else if (next.y < me.y) await client.move("down");
-            me.x = next.x;
-            me.y = next.y;
+            if (res.length == 0) throw ["no path found"]; // if no path found then quit
+
+            // move to each node in the path
+            for (let i = 0; i < res.length; i++) {
+                if (this.stopped) throw ["stopped"]; // if stopped then quit
+                let next = res[i];
+                if (next.x > me.x) await client.move("right");
+                else if (next.x < me.x) await client.move("left");
+                if (next.y > me.y) await client.move("up");
+                else if (next.y < me.y) await client.move("down");
+                me.x = next.x;
+                me.y = next.y;
+            }
         }
 
         return true;
