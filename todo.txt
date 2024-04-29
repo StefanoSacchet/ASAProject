@@ -4,7 +4,7 @@ First challenge May 7th:
     - Deliver parcels once taken:
         * maybe change intentions while delivering
     - Path planning:
-        * change "go_to"
+        * check A* planning
     - Order intentions based on priority:
         * check if other agents are closer than us
     - Fine tune treshold

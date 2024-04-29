@@ -52,9 +52,9 @@ client.onMap((width, height, tiles) => {
     let matrix = Array(height)
         .fill()
         .map(() => Array(width).fill(0));
-    // Fill in ones where there is a tile
+    // fill in ones where there is a tile
     tiles.forEach((tile) => {
-        matrix[tile.y][tile.x] = 1;
+        matrix[tile.x][tile.y] = 1;
     });
     graph = new Graph(matrix);
 });
@@ -393,66 +393,21 @@ class GoTo extends Plan {
     }
 
     async execute(go_to, x, y) {
-        while (me.x != x || me.y != y) {
+        const start = graph.grid[me.x][me.y];
+        const end = graph.grid[x][y];
+        const res = astar.search(graph, start, end); // A* search
+
+        // move to each node in the path
+        for (let i = 0; i < res.length; i++) {
             if (this.stopped) throw ["stopped"]; // if stopped then quit
-
-            let status_x = false;
-            let status_y = false;
-
-            // this.log('me', me, 'xy', x, y);
-
-            if (x > me.x) status_x = await client.move("right");
-            // status_x = await this.subIntention( 'go_to', {x: me.x+1, y: me.y} );
-            else if (x < me.x) status_x = await client.move("left");
-            // status_x = await this.subIntention( 'go_to', {x: me.x-1, y: me.y} );
-
-            if (status_x) {
-                me.x = status_x.x;
-                me.y = status_x.y;
-            }
-
-            if (this.stopped) throw ["stopped"]; // if stopped then quit
-
-            if (y > me.y) status_y = await client.move("up");
-            // status_x = await this.subIntention( 'go_to', {x: me.x, y: me.y+1} );
-            else if (y < me.y) status_y = await client.move("down");
-            // status_x = await this.subIntention( 'go_to', {x: me.x, y: me.y-1} );
-
-            if (status_y) {
-                me.x = status_y.x;
-                me.y = status_y.y;
-            }
-
-            if (!status_x && !status_y) {
-                this.log("stucked");
-                throw "stucked";
-            } else if (me.x == x && me.y == y) {
-                // this.log('target reached');
-            }
+            let next = res[i];
+            if (next.x > me.x) await client.move("right");
+            else if (next.x < me.x) await client.move("left");
+            if (next.y > me.y) await client.move("up");
+            else if (next.y < me.y) await client.move("down");
+            me.x = next.x;
+            me.y = next.y;
         }
-
-        // let start = graph.grid[me.x][me.y];
-        // let end = graph.grid[x][y];
-        // let res = astar.search(graph, start, end);
-
-        // //TODO fix this
-        // for (let i = 0; i < res.length; i++) {
-        //     if (this.stopped) throw ["stopped"]; // if stopped then quit
-        //     let { x, y } = res[i];
-        //     let dx = x - me.x;
-        //     let dy = y - me.y;
-
-        //     let direction;
-        //     if (dx === 1) direction = "right";
-        //     else if (dx === -1) direction = "left";
-        //     else if (dy === 1) direction = "up";
-        //     else if (dy === -1) direction = "down";
-
-        //     console.log("moving", direction);
-        //     let status = await client.move(direction);
-        //     me.x = status.x;
-        //     me.y = status.y;
-        // }
 
         return true;
     }
