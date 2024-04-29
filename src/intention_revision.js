@@ -1,53 +1,20 @@
 import { DeliverooApi } from "@unitn-asa/deliveroo-js-client";
+import { astar, Graph } from "../utils/astar.js";
+import { distance, nearestDelivery } from "../utils/functions.js";
 
 const client = new DeliverooApi(
     "http://localhost:8080",
-    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjgzYzRmOWUxY2NjIiwibmFtZSI6InN0ZSIsImlhdCI6MTcxMzg2MzIyMn0.jbB1vynlgTnTsTAA_TmPWhfor4-orX5lhPmErv_afZU"
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImY2YTA3NzU5OTVlIiwibmFtZSI6InN0ZSIsImlhdCI6MTcxMzg2NzExNn0.6aMQeOP7Bp3Plk5R0sH-shYiECbRfz6K-iOlmAdP-Yw"
 );
 
-function distance({ x: x1, y: y1 }, { x: x2, y: y2 }) {
-    const dx = Math.abs(Math.round(x1) - Math.round(x2));
-    const dy = Math.abs(Math.round(y1) - Math.round(y2));
-    return dx + dy;
-}
+// store plan classes
+const planLibrary = [];
 
-/**
- * Beliefset revision function
- */
+// store agent state
 const me = { carrying: new Map() };
-client.onYou(({ id, name, x, y, score }) => {
-    me.id = id;
-    me.name = name;
-    me.x = x;
-    me.y = y;
-    me.score = score;
-});
+
+// store perceived parcels
 const parcels = new Map();
-client.onParcelsSensing(async (perceived_parcels) => {
-    for (const p of perceived_parcels) {
-        parcels.set(p.id, p);
-    }
-
-    //TODO don't remove not expiered parcels
-    // remove expiered parcels
-    for (const [id, parcel] of parcels.entries()) {
-        if (!perceived_parcels.find((p) => p.id === id)) {
-            parcels.delete(id);
-            me.carrying.delete(id);
-        }
-    }
-});
-
-let PARCEL_REWARD_AVG;
-client.onConfig((param) => {
-    PARCEL_REWARD_AVG = param.PARCEL_REWARD_AVG;
-});
-
-function nearestDelivery({ x, y }) {
-    return Array.from(map.tiles.values())
-        .filter(({ delivery }) => delivery)
-        .sort((a, b) => distance(a, { x, y }) - distance(b, { x, y }))[0];
-}
 
 // store map
 const map = {
@@ -62,11 +29,57 @@ const map = {
         return this.tiles.get(x + 1000 * y);
     },
 };
+
+// A* graph
+let graph;
+
+// used to compute threshold
+let PARCEL_REWARD_AVG;
+
+client.onConfig((param) => {
+    PARCEL_REWARD_AVG = param.PARCEL_REWARD_AVG;
+});
+
 client.onMap((width, height, tiles) => {
+    // store map
     map.width = width;
     map.height = height;
     for (const t of tiles) {
         map.add(t);
+    }
+
+    // create graph for A*
+    let matrix = Array(height)
+        .fill()
+        .map(() => Array(width).fill(0));
+    // Fill in ones where there is a tile
+    tiles.forEach((tile) => {
+        matrix[tile.y][tile.x] = 1;
+    });
+    graph = new Graph(matrix);
+});
+
+client.onYou(({ id, name, x, y, score }) => {
+    me.id = id;
+    me.name = name;
+    me.x = x;
+    me.y = y;
+    me.score = score;
+});
+
+client.onParcelsSensing(async (perceived_parcels) => {
+    // update perceived parcels
+    for (const p of perceived_parcels) {
+        parcels.set(p.id, p);
+    }
+
+    //TODO don't remove not expiered parcels
+    // remove expiered parcels
+    for (const [id, parcel] of parcels.entries()) {
+        if (!perceived_parcels.find((p) => p.id === id)) {
+            parcels.delete(id);
+            me.carrying.delete(id);
+        }
     }
 });
 
@@ -320,8 +333,6 @@ class Intention {
 /**
  * Plan library
  */
-const planLibrary = [];
-
 class Plan {
     // This is used to stop the plan
     #stopped = false;
@@ -368,9 +379,9 @@ class GoPickUp extends Plan {
     async execute(go_pick_up, x, y, id) {
         if (this.stopped) throw ["stopped"]; // if stopped then quit
         await this.subIntention(["go_to", x, y]);
-        if (this.stopped) throw ["stopped"]; // if stopped then quit
+        if (this.stopped) throw ["stopped"];
         await client.pickup();
-        if (this.stopped) throw ["stopped"]; // if stopped then quit
+        if (this.stopped) throw ["stopped"];
         me.carrying.set(id, parcels.get(id));
         return true;
     }
@@ -420,6 +431,29 @@ class GoTo extends Plan {
             }
         }
 
+        // let start = graph.grid[me.x][me.y];
+        // let end = graph.grid[x][y];
+        // let res = astar.search(graph, start, end);
+
+        // //TODO fix this
+        // for (let i = 0; i < res.length; i++) {
+        //     if (this.stopped) throw ["stopped"]; // if stopped then quit
+        //     let { x, y } = res[i];
+        //     let dx = x - me.x;
+        //     let dy = y - me.y;
+
+        //     let direction;
+        //     if (dx === 1) direction = "right";
+        //     else if (dx === -1) direction = "left";
+        //     else if (dy === 1) direction = "up";
+        //     else if (dy === -1) direction = "down";
+
+        //     console.log("moving", direction);
+        //     let status = await client.move(direction);
+        //     me.x = status.x;
+        //     me.y = status.y;
+        // }
+
         return true;
     }
 }
@@ -445,7 +479,7 @@ class GoDeliver extends Plan {
     }
 
     async execute(go_deliver) {
-        let deliveryTile = nearestDelivery(me);
+        let deliveryTile = nearestDelivery(me, map);
 
         await this.subIntention(["go_to", deliveryTile.x, deliveryTile.y]);
         if (this.stopped) throw ["stopped"]; // if stopped then quit
