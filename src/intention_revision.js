@@ -9,6 +9,9 @@ export const planLibrary = [];
 // store perceived parcels
 export const parcels = new Map();
 
+// store perceived agents
+const agents = new Map();
+
 // store map
 const map = {
     width: undefined,
@@ -54,6 +57,18 @@ function updateParcels(perceived_parcels) {
     }
 }
 
+function updateAgents(percieved_agents) {
+    // delete agents not present anymore
+    for (const [id, agent] of agents.entries()) {
+        if (!percieved_agents.find((agent) => agent.id === id)) agents.delete(id);
+    }
+    // update agents
+    percieved_agents.forEach((agent) => {
+        if (!agents.has(agent.id)) agents.set(agent.id, agent);
+        else agents.set(agent.id, agent);
+    });
+}
+
 client.onMap((width, height, tiles) => {
     // store map
     map.width = width;
@@ -81,7 +96,13 @@ client.onYou(({ id, name, x, y, score }) => {
     me.score = score;
 });
 
-client.onAgentsSensing((agents) => {
+/*
+if agent.x = 2.6 --> he's moving from 2 to 3
+if agent.x = 2.4 --> he's moving from 3 to 2
+*/
+client.onAgentsSensing((percieved_agents) => {
+    updateAgents(percieved_agents);
+
     if (!matrix && !graph) return;
 
     let matrix_changed = false;
@@ -93,10 +114,10 @@ client.onAgentsSensing((agents) => {
     });
     // remove tiles where there is an agent
     agents.forEach((agent) => {
-        //TODO handle agents with x and y not integers
-        // check if agent.x and agent.y are integers
-        if (!Number.isInteger(agent.x) || !Number.isInteger(agent.y)) return;
-        matrix[agent.x][agent.y] = 0;
+        // check if value is .6 or .4
+        let x = Math.round(agent.x);
+        let y = Math.round(agent.y);
+        matrix[x][y] = 0;
         matrix_changed = true;
     });
 
@@ -200,6 +221,23 @@ class GoPickUp extends Plan {
     }
 }
 
+function ifAboveDelivery() {
+    if (me.carrying.size > 0) {
+        let deliveryTile = nearestDelivery(me, map);
+        if (me.x == deliveryTile.x && me.y == deliveryTile.y) client.putdown();
+    }
+}
+
+function ifAbovePickup() {
+    for (const parcel of parcels.values()) {
+        if (parcel.x == me.x && parcel.y == me.y) {
+            client.pickup();
+            me.carrying.set(parcel.id, parcel);
+            break;
+        }
+    }
+}
+
 class GoTo extends Plan {
     static isApplicableTo(go_to, x, y) {
         return go_to == "go_to";
@@ -220,6 +258,9 @@ class GoTo extends Plan {
 
             // move to each node in the path
             for (let i = 0; i < res.length; i++) {
+                ifAboveDelivery();
+                ifAbovePickup();
+
                 if (this.stopped) throw ["stopped"]; // if stopped then quit
                 let next = res[i];
                 if (next.x > me.x) status_x = await client.move("right");
@@ -243,6 +284,21 @@ class Patrolling extends Plan {
 
     async execute(patrolling) {
         if (this.stopped) throw ["stopped"]; // if stopped then quit
+
+        //TODO fix this
+        // move away from other agents
+        // let tile;
+        // for (const agent of agents.values()) {
+        //     if (this.stopped) throw ["stopped"]; // if stopped then quit
+        //     if (agent.id == me.id) continue;
+        //     // call subintention go_to random tile away from agent
+        //     tile = map.tiles.get(agent.x + 1 + 1000 * agent.y);
+        //     if (tile) break;
+        // }
+
+        // await this.subIntention(["go_to", tile.x, tile.y]);
+        // if (this.stopped) throw ["stopped"]; // if stopped then quit
+
         let i = Math.round(Math.random() * map.tiles.size);
         let tile = Array.from(map.tiles.values()).at(i);
         if (tile) await this.subIntention(["go_to", tile.x, tile.y]);
