@@ -29,7 +29,7 @@ export function getCarriedRewardAndTreshold(me, config) {
     return [carriedReward, TRESHOLD];
 }
 
-export function canDeliverInTime(me, config) {
+export function canDeliverContentInTime(me, config) {
     let deliveryTile = nearestDelivery(me, map);
     let carriedReward = getCarriedRewardAndTreshold(me, config)[0];
 

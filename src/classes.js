@@ -1,4 +1,4 @@
-import { canDeliverInTime } from "../utils/functions.js";
+import { canDeliverContentInTime } from "../utils/functions.js";
 import { parcels, planLibrary } from "./intention_revision.js";
 import { me, PARCEL_REWARD_AVG, config, client, DEBUG } from "./shared.js";
 

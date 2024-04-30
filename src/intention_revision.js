@@ -43,8 +43,8 @@ function updateParcels(perceived_parcels) {
             if (parcel.carriedBy && parcel.carriedBy.id === me.id) {
                 me.carrying.set(id, parcel);
             }
-            if (DEBUG) console.log("me.carrying", me.carrying);
-            if (DEBUG) console.log("parcels", parcels);
+            // if (DEBUG) console.log("me.carrying", me.carrying);
+            // if (DEBUG) console.log("parcels", parcels);
         }
     }
 }
@@ -146,12 +146,12 @@ client.onParcelsSensing((perceived_parcels) => {
             (acc, parcel) => parseInt(acc) + parseInt(parcel.reward),
             0
         );
-        if (DEBUG) console.log("checking carried parcels: ", carriedReward, "TRESHOLD: ", TRESHOLD);
+        // if (DEBUG) console.log("checking carried parcels: ", carriedReward, "TRESHOLD: ", TRESHOLD);
     }
 
     // go deliver
     if (carriedReward > TRESHOLD && TRESHOLD !== 0) {
-        if (DEBUG) console.log("go_deliver");
+        // if (DEBUG) console.log("go_deliver");
         myAgent.push(["go_deliver"]);
         return;
     }
