@@ -27,14 +27,9 @@ const map = {
 let graph;
 
 // used to compute threshold
-let PARCEL_REWARD_AVG;
 
 // map matrix
 var matrix;
-
-client.onConfig((param) => {
-    PARCEL_REWARD_AVG = param.PARCEL_REWARD_AVG;
-});
 
 client.onMap((width, height, tiles) => {
     // store map
@@ -97,8 +92,7 @@ client.onParcelsSensing(async (perceived_parcels) => {
         if (!perceived_parcels.find((p) => p.id === id)) {
             parcels.delete(id);
             me.carrying.delete(id);
-        }
-        else{
+        } else {
             // update carriedBy
             if (parcel.carriedBy && parcel.carriedBy.id === me.id) {
                 parcel.carriedBy = me;
@@ -133,7 +127,10 @@ client.onParcelsSensing((perceived_parcels) => {
     const TRESHOLD = (carriedQty * PARCEL_REWARD_AVG) / 2;
     let carriedReward = 0;
     if (me.carrying.size > 0) {
-        carriedReward = Array.from(me.carrying.values()).reduce((acc, parcel) => parseInt(acc) + parseInt(parcel.reward), 0);
+        carriedReward = Array.from(me.carrying.values()).reduce(
+            (acc, parcel) => parseInt(acc) + parseInt(parcel.reward),
+            0
+        );
         console.log("checking carried parcels: ", carriedReward, "TRESHOLD: ", TRESHOLD);
     }
     // console.log("carriedReward", carriedReward);
@@ -142,7 +139,7 @@ client.onParcelsSensing((perceived_parcels) => {
 
     // go deliver
     if (carriedReward > TRESHOLD && TRESHOLD !== 0) {
-        console.log("go_deliver")
+        console.log("go_deliver");
         myAgent.push(["go_deliver"]);
         return;
     }
@@ -176,7 +173,7 @@ client.onParcelsSensing((perceived_parcels) => {
      */
     if (best_option) {
         myAgent.push(best_option);
-    } 
+    }
     // else myAgent.push(["patrolling"]);
 });
 // client.onAgentsSensing( agentLoop )
@@ -188,7 +185,7 @@ client.onParcelsSensing((perceived_parcels) => {
 
 // const myAgent = new IntentionRevisionQueue();
 const myAgent = new IntentionRevisionReplace();
-myAgent.idle = [ "patrolling" ];
+myAgent.idle = ["patrolling"];
 // const myAgent = new IntentionRevisionRevise();
 myAgent.loop();
 

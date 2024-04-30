@@ -2,7 +2,7 @@ import { DeliverooApi } from "@unitn-asa/deliveroo-js-client";
 
 export const client = new DeliverooApi(
     "http://localhost:8080",
-    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjNiMTJmNWNiMWQ0IiwibmFtZSI6Ikx1Y2EiLCJpYXQiOjE3MTM4NTkwMjN9.s1vkOaMPfnLDhiPsboeEMCsgdLS5JF_NLiwWvTMLHj8"
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImY2YTA3NzU5OTVlIiwibmFtZSI6InN0ZSIsImlhdCI6MTcxMzg2NzExNn0.6aMQeOP7Bp3Plk5R0sH-shYiECbRfz6K-iOlmAdP-Yw"
 );
 
 // store agent state
@@ -18,9 +18,7 @@ client.onConfig((param) => {
 });
 
 export class Config {
-    constructor(
-        param
-    ) {
+    constructor(param) {
         this.MAP_FILE = param.MAP_FILE;
         this.PARCELS_GENERATION_INTERVAL = param.PARCELS_GENERATION_INTERVAL;
         this.PARCELS_MAX = param.PARCELS_MAX;
