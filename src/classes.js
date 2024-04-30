@@ -1,4 +1,5 @@
 import { parcels, planLibrary } from "./intention_revision.js";
+import { me, PARCEL_REWARD_AVG, config } from "./shared.js";
 
 /**
  * Intention revision loop
@@ -22,12 +23,34 @@ export class IntentionRevision {
                 const intention = this.intention_queue[0];
 
                 // Is queued intention still valid? Do I still want to achieve it?
+                // TODO: cases for which intention is no more valid
+                // 1) parcel can no longer be delivered in time (another agent is closer)
+                // 2) goto intention will be blocked by an agent standing in the way (?)
+                console.log("=====================================");
+                console.log("Checking if intention is still valid", intention.predicate);
+                console.log("=====================================");
+                
+                // TODO maybe use a switch statement or a class-based approach
                 // TODO this hard-coded implementation is an example
-                let id = intention.predicate[2];
-                let p = parcels.get(id);
-                if (p && p.carriedBy) {
-                    console.log("Skipping intention because no more valid", intention.predicate);
-                    continue;
+                if (intention.predicate[0] == "go_pick_up") {
+                    let id = intention.predicate[3];
+                    let p = parcels.get(id);
+                    if (p && p.carriedBy) {
+                        console.log("Skipping intention because no more valid", intention.predicate);
+                        continue;
+                    }
+                }
+                else if (intention.predicate[0] == "patrolling" && config) {
+                    
+                    let carriedQty = me.carrying.size;
+                    const TRESHOLD = (carriedQty * config.PARCEL_REWARD_AVG) / 2;
+                    let carriedReward = 0;
+                    if (me.carrying.size > 0) {
+                        carriedReward = Array.from(me.carrying.values()).reduce((acc, parcel) => parseInt(acc) + parseInt(parcel.reward), 0);
+                        console.log("checking carried parcels: ", carriedReward, "TRESHOLD: ", TRESHOLD);
+                    }
+                    // control if the agent is carrying parcels and if the reward can be delivered in time
+
                 }
 
                 // Start achieving intention
@@ -40,6 +63,9 @@ export class IntentionRevision {
 
                 // Remove from the queue
                 this.intention_queue.shift();
+            }
+            else {
+                this.push( this.idle );
             }
             // Postpone next iteration at setImmediate
             await new Promise((res) => setImmediate(res));
@@ -90,6 +116,20 @@ class IntentionRevisionRevise extends IntentionRevision {
         // - order intentions based on utility function (reward - cost) (for example, parcel score minus distance)
         // - eventually stop current one
         // - evaluate validity of intention
+        // Check if already queued
+        const last = this.intention_queue.at(this.intention_queue.length - 1);
+        if (last && last.predicate.join(" ") == predicate.join(" ")) {
+            return; // intention is already being achieved
+        }
+
+        console.log("IntentionRevisionReplace.push", predicate);
+        const intention = new Intention(this, predicate);
+        this.intention_queue.push(intention);
+
+        // Force current intention stop
+        if (last) {
+            last.stop();
+        }
     }
 }
 

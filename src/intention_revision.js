@@ -1,21 +1,13 @@
-import { DeliverooApi } from "@unitn-asa/deliveroo-js-client";
 import { astar, Graph } from "../utils/astar.js";
 import { distance, nearestDelivery } from "../utils/functions.js";
 import { Plan, IntentionRevisionReplace } from "./classes.js";
-
-const client = new DeliverooApi(
-    "http://localhost:8080",
-    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImY2YTA3NzU5OTVlIiwibmFtZSI6InN0ZSIsImlhdCI6MTcxMzg2NzExNn0.6aMQeOP7Bp3Plk5R0sH-shYiECbRfz6K-iOlmAdP-Yw"
-);
+import { me, client, PARCEL_REWARD_AVG } from "./shared.js";
 
 // store plan classes
 export const planLibrary = [];
 
 // store perceived parcels
 export const parcels = new Map();
-
-// store agent state
-const me = { carrying: new Map() };
 
 // store map
 const map = {
@@ -33,13 +25,6 @@ const map = {
 
 // A* graph
 let graph;
-
-// used to compute threshold
-let PARCEL_REWARD_AVG;
-
-client.onConfig((param) => {
-    PARCEL_REWARD_AVG = param.PARCEL_REWARD_AVG;
-});
 
 client.onMap((width, height, tiles) => {
     // store map
@@ -81,6 +66,22 @@ client.onParcelsSensing(async (perceived_parcels) => {
             parcels.delete(id);
             me.carrying.delete(id);
         }
+        else{
+            // update carriedBy
+            if (parcel.carriedBy && parcel.carriedBy.id === me.id) {
+                parcel.carriedBy = me;
+            }
+            // update me.carrying
+            if (me.carrying.has(id)) {
+                me.carrying.set(id, parcel);
+            }
+            // update me.carrying if found in parcels but not in me.carrying
+            if (parcel.carriedBy && parcel.carriedBy.id === me.id) {
+                me.carrying.set(id, parcel);
+            }
+            console.log("me.carrying", me.carrying);
+            console.log("parcels", parcels);
+        }
     }
 });
 
@@ -92,10 +93,18 @@ client.onParcelsSensing((parcels) => {
 
     let carriedQty = me.carrying.size;
     const TRESHOLD = (carriedQty * PARCEL_REWARD_AVG) / 2;
-    let carriedReward = Array.from(me.carrying.values()).reduce((acc, parcel) => acc + parcel.reward, 0);
+    let carriedReward = 0;
+    if (me.carrying.size > 0) {
+        carriedReward = Array.from(me.carrying.values()).reduce((acc, parcel) => parseInt(acc) + parseInt(parcel.reward), 0);
+        console.log("checking carried parcels: ", carriedReward, "TRESHOLD: ", TRESHOLD);
+    }
+    // console.log("carriedReward", carriedReward);
+    // console.log("TRESHOLD", TRESHOLD);
+    // console.log("carriedQty", carriedQty);
 
     // go deliver
     if (carriedReward > TRESHOLD && TRESHOLD !== 0) {
+        console.log("go_deliver")
         myAgent.push(["go_deliver"]);
         return;
     }
@@ -129,7 +138,8 @@ client.onParcelsSensing((parcels) => {
      */
     if (best_option) {
         myAgent.push(best_option);
-    } else myAgent.push(["patrolling"]);
+    } 
+    // else myAgent.push(["patrolling"]);
 });
 // client.onAgentsSensing( agentLoop )
 // client.onYou( agentLoop )
@@ -140,6 +150,7 @@ client.onParcelsSensing((parcels) => {
 
 // const myAgent = new IntentionRevisionQueue();
 const myAgent = new IntentionRevisionReplace();
+myAgent.idle = [ "patrolling" ];
 // const myAgent = new IntentionRevisionRevise();
 myAgent.loop();
 
@@ -154,8 +165,11 @@ class GoPickUp extends Plan {
         if (this.stopped) throw ["stopped"];
         await client.pickup();
         if (this.stopped) throw ["stopped"];
-        me.carrying.set(id, parcels.get(id));
-        return true;
+        else {
+            console.log("picked up", id);
+            me.carrying.set(id, parcels.get(id));
+            return true;
+        }
     }
 }
 
