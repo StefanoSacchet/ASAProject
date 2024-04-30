@@ -1,35 +1,19 @@
 import { astar, Graph } from "../utils/astar.js";
 import { distance, nearestDelivery } from "../utils/functions.js";
 import { Plan, IntentionRevisionReplace } from "./classes.js";
-import { me, client, PARCEL_REWARD_AVG } from "./shared.js";
+import { me, client, config, map } from "./shared.js";
+
+// A* graph
+export var graph;
+
+// map matrix
+export var matrix;
 
 // store plan classes
 export const planLibrary = [];
 
 // store perceived parcels
 export const parcels = new Map();
-
-// store map
-const map = {
-    width: undefined,
-    height: undefined,
-    tiles: new Map(),
-    add: function (tile) {
-        const { x, y } = tile;
-        return this.tiles.set(x + 1000 * y, tile);
-    },
-    xy: function (x, y) {
-        return this.tiles.get(x + 1000 * y);
-    },
-};
-
-// A* graph
-let graph;
-
-// used to compute threshold
-
-// map matrix
-var matrix;
 
 client.onMap((width, height, tiles) => {
     // store map
@@ -124,7 +108,7 @@ client.onParcelsSensing((perceived_parcels) => {
     // if (!new_parcel_sensed) return;
 
     let carriedQty = me.carrying.size;
-    const TRESHOLD = (carriedQty * PARCEL_REWARD_AVG) / 2;
+    const TRESHOLD = (carriedQty * config.PARCEL_REWARD_AVG) / 2;
     let carriedReward = 0;
     if (me.carrying.size > 0) {
         carriedReward = Array.from(me.carrying.values()).reduce(

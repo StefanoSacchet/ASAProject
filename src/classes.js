@@ -1,5 +1,6 @@
+import { canDeliverInTime } from "../utils/functions.js";
 import { parcels, planLibrary } from "./intention_revision.js";
-import { me, PARCEL_REWARD_AVG, config } from "./shared.js";
+import { me, PARCEL_REWARD_AVG, config, client } from "./shared.js";
 
 /**
  * Intention revision loop
@@ -20,7 +21,7 @@ export class IntentionRevision {
                 );
 
                 // Current intention
-                const intention = this.intention_queue[0];
+                let intention = this.intention_queue[0];
 
                 // Is queued intention still valid? Do I still want to achieve it?
                 // TODO: cases for which intention is no more valid
@@ -41,15 +42,18 @@ export class IntentionRevision {
                     }
                 }
                 else if (intention.predicate[0] == "patrolling" && config) {
-                    
-                    let carriedQty = me.carrying.size;
-                    const TRESHOLD = (carriedQty * config.PARCEL_REWARD_AVG) / 2;
-                    let carriedReward = 0;
-                    if (me.carrying.size > 0) {
-                        carriedReward = Array.from(me.carrying.values()).reduce((acc, parcel) => parseInt(acc) + parseInt(parcel.reward), 0);
-                        console.log("checking carried parcels: ", carriedReward, "TRESHOLD: ", TRESHOLD);
-                    }
                     // control if the agent is carrying parcels and if the reward can be delivered in time
+                    if(canDeliverInTime(me, config)) {
+                        // go deliver
+                        intention = new Intention(this, ["go_deliver"]);
+                    }
+                    else {
+                        // drop parcels and keep patrolling
+                        await client.putdown();
+
+                        // empty carrying
+                        me.carrying.clear();
+                    }
 
                 }
 
