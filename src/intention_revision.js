@@ -93,6 +93,7 @@ if agent.x = 2.6 --> he's moving from 2 to 3
 if agent.x = 2.4 --> he's moving from 3 to 2
 */
 client.onAgentsSensing((percieved_agents) => {
+
     updateAgents(percieved_agents);
 
     if (!matrix && !graph) return;
@@ -116,10 +117,16 @@ client.onAgentsSensing((percieved_agents) => {
     if (matrix_changed) graph = new Graph(matrix);
 });
 
+// setTimeout(() => {
+//     myAgent.clear();
+//     myAgent.push(["patrolling"]);
+// }, 1000000);
+
 /**
  * Options generation and filtering function
  */
 client.onParcelsSensing((perceived_parcels) => {
+
     // remove expiered parcels and update carriedBy
     updateParcels(perceived_parcels);
 

@@ -43,21 +43,18 @@ export class IntentionRevision {
                         if (DEBUG) console.log("Skipping intention because no more valid", intention.predicate);
                         continue;
                     }
-                }
-                else if (intention.predicate[0] == "patrolling" && config) {
+                } else if (intention.predicate[0] == "patrolling" && config) {
                     // control if the agent is carrying parcels and if the reward can be delivered in time
-                    if(canDeliverInTime(me, config)) {
+                    if (canDeliverInTime(me, config)) {
                         // go deliver
                         intention = new Intention(this, ["go_deliver"]);
-                    }
-                    else {
+                    } else {
                         // drop parcels and keep patrolling
                         await client.putdown();
 
                         // empty carrying
                         me.carrying.clear();
                     }
-
                 }
 
                 // Start achieving intention
@@ -112,6 +109,10 @@ export class IntentionRevisionReplace extends IntentionRevision {
         if (last) {
             last.stop();
         }
+    }
+
+    async clear() {
+        this.intention_queue = [];
     }
 }
 

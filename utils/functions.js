@@ -1,6 +1,6 @@
 import { graph } from "../src/intention_revision.js";
-import { map } from "../src/shared.js";
-import { astar} from "./astar.js";
+import { DEBUG, map } from "../src/shared.js";
+import { astar } from "./astar.js";
 
 export function distance({ x: x1, y: y1 }, { x: x2, y: y2 }) {
     const dx = Math.abs(Math.round(x1) - Math.round(x2));
@@ -19,9 +19,12 @@ export function getCarriedRewardAndTreshold(me, config) {
     // TODO revise TRESHOLD computation
     const TRESHOLD = (carriedQty * config.PARCEL_REWARD_AVG) / 2;
     let carriedReward = 0;
-    if (me.carrying.size > 0) {
-        carriedReward = Array.from(me.carrying.values()).reduce((acc, parcel) => parseInt(acc) + parseInt(parcel.reward), 0);
-        console.log("checking carried parcels: ", carriedReward, "TRESHOLD: ", TRESHOLD);
+    if (me.carrying && me.carrying.size > 0) {
+        carriedReward = Array.from(me.carrying.values()).reduce(
+            (acc, parcel) => (parcel && parcel.reward ? parseInt(acc) + parseInt(parcel.reward) : acc),
+            0
+        );
+        if (DEBUG) console.log("checking carried parcels: ", carriedReward, "TRESHOLD: ", TRESHOLD);
     }
     return [carriedReward, TRESHOLD];
 }
@@ -29,8 +32,6 @@ export function getCarriedRewardAndTreshold(me, config) {
 export function canDeliverInTime(me, config) {
     let deliveryTile = nearestDelivery(me, map);
     let carriedReward = getCarriedRewardAndTreshold(me, config)[0];
-
-    
 
     const start = graph.grid[me.x][me.y];
     const end = graph.grid[deliveryTile.x][deliveryTile.y];
@@ -40,18 +41,16 @@ export function canDeliverInTime(me, config) {
 
     let timeToDeliver = distanceFromDeliveryTile.length * config.MOVEMENT_DURATION;
     var timeForCarriedExpiration;
-    if (config) {       
+    if (config) {
         if (config.PARCEL_DECADING_INTERVAL == "infinite") {
             timeForCarriedExpiration = timeToDeliver + 1;
-        }
-        else {
+        } else {
             // convert "1s", "2s", "3s" to 1, 2, 3 removing the s
             let parcelExpirationDuration = parseInt(config.PARCEL_DECADING_INTERVAL.replace("s", "")) * 1000;
 
             timeForCarriedExpiration = carriedReward * parcelExpirationDuration;
         }
-    }
-    else {
+    } else {
         timeForCarriedExpiration = timeToDeliver + 1;
     }
 
