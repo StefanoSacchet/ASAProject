@@ -1,5 +1,5 @@
 import { parcels, planLibrary } from "./intention_revision.js";
-import { me, PARCEL_REWARD_AVG, config } from "./shared.js";
+import { me, PARCEL_REWARD_AVG, config, DEBUG } from "./shared.js";
 
 /**
  * Intention revision loop
@@ -14,10 +14,11 @@ export class IntentionRevision {
         while (true) {
             // Consumes intention_queue if not empty
             if (this.intention_queue.length > 0) {
-                console.log(
-                    "intentionRevision.loop",
-                    this.intention_queue.map((i) => i.predicate)
-                );
+                if (DEBUG)
+                    console.log(
+                        "intentionRevision.loop",
+                        this.intention_queue.map((i) => i.predicate)
+                    );
 
                 // Current intention
                 const intention = this.intention_queue[0];
@@ -26,31 +27,33 @@ export class IntentionRevision {
                 // TODO: cases for which intention is no more valid
                 // 1) parcel can no longer be delivered in time (another agent is closer)
                 // 2) goto intention will be blocked by an agent standing in the way (?)
-                console.log("=====================================");
-                console.log("Checking if intention is still valid", intention.predicate);
-                console.log("=====================================");
-                
+                if (DEBUG) {
+                    console.log("=====================================");
+                    console.log("Checking if intention is still valid", intention.predicate);
+                    console.log("=====================================");
+                }
+
                 // TODO maybe use a switch statement or a class-based approach
                 // TODO this hard-coded implementation is an example
                 if (intention.predicate[0] == "go_pick_up") {
                     let id = intention.predicate[3];
                     let p = parcels.get(id);
                     if (p && p.carriedBy) {
-                        console.log("Skipping intention because no more valid", intention.predicate);
+                        if (DEBUG) console.log("Skipping intention because no more valid", intention.predicate);
                         continue;
                     }
-                }
-                else if (intention.predicate[0] == "patrolling" && config) {
-                    
+                } else if (intention.predicate[0] == "patrolling" && config) {
                     let carriedQty = me.carrying.size;
                     const TRESHOLD = (carriedQty * config.PARCEL_REWARD_AVG) / 2;
                     let carriedReward = 0;
                     if (me.carrying.size > 0) {
-                        carriedReward = Array.from(me.carrying.values()).reduce((acc, parcel) => parseInt(acc) + parseInt(parcel.reward), 0);
-                        console.log("checking carried parcels: ", carriedReward, "TRESHOLD: ", TRESHOLD);
+                        carriedReward = Array.from(me.carrying.values()).reduce(
+                            (acc, parcel) => parseInt(acc) + parseInt(parcel.reward),
+                            0
+                        );
+                        if (DEBUG) console.log("checking carried parcels: ", carriedReward, "TRESHOLD: ", TRESHOLD);
                     }
                     // control if the agent is carrying parcels and if the reward can be delivered in time
-
                 }
 
                 // Start achieving intention
@@ -58,14 +61,13 @@ export class IntentionRevision {
                     .achieve()
                     // Catch eventual error and continue
                     .catch((error) => {
-                        // console.log( 'Failed intention', ...intention.predicate, 'with error:', ...error )
+                        // if (DEBUG) console.log("Failed intention", ...intention.predicate, "with error:", ...error);
                     });
 
                 // Remove from the queue
                 this.intention_queue.shift();
-            }
-            else {
-                this.push( this.idle );
+            } else {
+                this.push(this.idle);
             }
             // Postpone next iteration at setImmediate
             await new Promise((res) => setImmediate(res));
@@ -75,7 +77,7 @@ export class IntentionRevision {
     // async push ( predicate ) { }
 
     log(...args) {
-        console.log(...args);
+        if (DEBUG) console.log(...args);
     }
 }
 
@@ -84,7 +86,7 @@ class IntentionRevisionQueue extends IntentionRevision {
         // Check if already queued
         if (this.intention_queue.find((i) => i.predicate.join(" ") == predicate.join(" "))) return; // intention is already queued
 
-        console.log("IntentionRevisionReplace.push", predicate);
+        if (DEBUG) console.log("IntentionRevisionReplace.push", predicate);
         const intention = new Intention(this, predicate);
         this.intention_queue.push(intention);
     }
@@ -98,7 +100,7 @@ export class IntentionRevisionReplace extends IntentionRevision {
             return; // intention is already being achieved
         }
 
-        console.log("IntentionRevisionReplace.push", predicate);
+        if (DEBUG) console.log("IntentionRevisionReplace.push", predicate);
         const intention = new Intention(this, predicate);
         this.intention_queue.push(intention);
 
@@ -111,7 +113,7 @@ export class IntentionRevisionReplace extends IntentionRevision {
 
 class IntentionRevisionRevise extends IntentionRevision {
     async push(predicate) {
-        console.log("Revising intention queue. Received", ...predicate);
+        if (DEBUG) console.log("Revising intention queue. Received", ...predicate);
         // TODO
         // - order intentions based on utility function (reward - cost) (for example, parcel score minus distance)
         // - eventually stop current one
@@ -122,7 +124,7 @@ class IntentionRevisionRevise extends IntentionRevision {
             return; // intention is already being achieved
         }
 
-        console.log("IntentionRevisionReplace.push", predicate);
+        if (DEBUG) console.log("IntentionRevisionReplace.push", predicate);
         const intention = new Intention(this, predicate);
         this.intention_queue.push(intention);
 
@@ -171,7 +173,7 @@ export class Intention {
 
     log(...args) {
         if (this.#parent && this.#parent.log) this.#parent.log("\t", ...args);
-        else console.log(...args);
+        else if (DEBUG) console.log(...args);
     }
 
     #started = false;
@@ -256,7 +258,7 @@ export class Plan {
 
     log(...args) {
         if (this.#parent && this.#parent.log) this.#parent.log("\t", ...args);
-        else console.log(...args);
+        else if (DEBUG) console.log(...args);
     }
 
     // this is an array of sub intention. Multiple ones could eventually being achieved in parallel.

@@ -5,6 +5,8 @@ export const client = new DeliverooApi(
     "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImY2YTA3NzU5OTVlIiwibmFtZSI6InN0ZSIsImlhdCI6MTcxMzg2NzExNn0.6aMQeOP7Bp3Plk5R0sH-shYiECbRfz6K-iOlmAdP-Yw"
 );
 
+export const DEBUG = true;
+
 // store agent state
 export const me = { carrying: new Map() };
 

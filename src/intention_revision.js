@@ -1,7 +1,7 @@
 import { astar, Graph } from "../utils/astar.js";
 import { distance, nearestDelivery } from "../utils/functions.js";
 import { Plan, IntentionRevisionReplace } from "./classes.js";
-import { me, client, PARCEL_REWARD_AVG } from "./shared.js";
+import { me, client, PARCEL_REWARD_AVG, DEBUG } from "./shared.js";
 
 // store plan classes
 export const planLibrary = [];
@@ -24,12 +24,35 @@ const map = {
 };
 
 // A* graph
-let graph;
-
-// used to compute threshold
+var graph;
 
 // map matrix
 var matrix;
+
+function updateParcels(perceived_parcels) {
+    //TODO don't remove not expiered parcels
+    for (const [id, parcel] of parcels.entries()) {
+        if (!perceived_parcels.find((p) => p.id === id)) {
+            parcels.delete(id);
+            me.carrying.delete(id);
+        } else {
+            // update carriedBy
+            if (parcel.carriedBy && parcel.carriedBy.id === me.id) {
+                parcel.carriedBy = me;
+            }
+            // update me.carrying
+            if (me.carrying.has(id)) {
+                me.carrying.set(id, parcel);
+            }
+            // update me.carrying if found in parcels but not in me.carrying
+            if (parcel.carriedBy && parcel.carriedBy.id === me.id) {
+                me.carrying.set(id, parcel);
+            }
+            if (DEBUG) console.log("me.carrying", me.carrying);
+            if (DEBUG) console.log("parcels", parcels);
+        }
+    }
+}
 
 client.onMap((width, height, tiles) => {
     // store map
@@ -80,48 +103,20 @@ client.onAgentsSensing((agents) => {
     if (matrix_changed) graph = new Graph(matrix);
 });
 
-client.onParcelsSensing(async (perceived_parcels) => {
-    // update perceived parcels
-    for (const p of perceived_parcels) {
-        parcels.set(p.id, p);
-    }
-
-    //TODO don't remove not expiered parcels
-    // remove expiered parcels
-    for (const [id, parcel] of parcels.entries()) {
-        if (!perceived_parcels.find((p) => p.id === id)) {
-            parcels.delete(id);
-            me.carrying.delete(id);
-        } else {
-            // update carriedBy
-            if (parcel.carriedBy && parcel.carriedBy.id === me.id) {
-                parcel.carriedBy = me;
-            }
-            // update me.carrying
-            if (me.carrying.has(id)) {
-                me.carrying.set(id, parcel);
-            }
-            // update me.carrying if found in parcels but not in me.carrying
-            if (parcel.carriedBy && parcel.carriedBy.id === me.id) {
-                me.carrying.set(id, parcel);
-            }
-            console.log("me.carrying", me.carrying);
-            console.log("parcels", parcels);
-        }
-    }
-});
-
 /**
  * Options generation and filtering function
  */
 client.onParcelsSensing((perceived_parcels) => {
-    // TODO revisit beliefset revision so to trigger option generation only in the case a new parcel is observed
-    // let new_parcel_sensed = false;
-    // for (const p of perceived_parcels) {
-    //     if (!parcels.has(p.id)) new_parcel_sensed = true; // new parcel sensed
-    //     parcels.set(p.id, p); // update perceived parcels
-    // }
-    // if (!new_parcel_sensed) return;
+    // remove expiered parcels and update carriedBy
+    updateParcels(perceived_parcels);
+
+    // revisit beliefset revision so to trigger option generation only in the case a new parcel is observed
+    let new_parcel_sensed = false;
+    for (const p of perceived_parcels) {
+        if (!parcels.has(p.id)) new_parcel_sensed = true; // new parcel sensed
+        parcels.set(p.id, p); // update perceived parcels
+    }
+    if (!new_parcel_sensed) return;
 
     let carriedQty = me.carrying.size;
     const TRESHOLD = (carriedQty * PARCEL_REWARD_AVG) / 2;
@@ -131,15 +126,12 @@ client.onParcelsSensing((perceived_parcels) => {
             (acc, parcel) => parseInt(acc) + parseInt(parcel.reward),
             0
         );
-        console.log("checking carried parcels: ", carriedReward, "TRESHOLD: ", TRESHOLD);
+        if (DEBUG) console.log("checking carried parcels: ", carriedReward, "TRESHOLD: ", TRESHOLD);
     }
-    // console.log("carriedReward", carriedReward);
-    // console.log("TRESHOLD", TRESHOLD);
-    // console.log("carriedQty", carriedQty);
 
     // go deliver
     if (carriedReward > TRESHOLD && TRESHOLD !== 0) {
-        console.log("go_deliver");
+        if (DEBUG) console.log("go_deliver");
         myAgent.push(["go_deliver"]);
         return;
     }
@@ -201,7 +193,7 @@ class GoPickUp extends Plan {
         await client.pickup();
         if (this.stopped) throw ["stopped"];
         else {
-            console.log("picked up", id);
+            if (DEBUG) console.log("picked up", id);
             me.carrying.set(id, parcels.get(id));
             return true;
         }
