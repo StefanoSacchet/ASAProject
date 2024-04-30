@@ -1,7 +1,13 @@
 import { astar, Graph } from "../utils/astar.js";
 import { distance, nearestDelivery } from "../utils/functions.js";
 import { Plan, IntentionRevisionReplace } from "./classes.js";
-import { me, client, PARCEL_REWARD_AVG, DEBUG } from "./shared.js";
+import { me, client, config, map, DEBUG } from "./shared.js";
+
+// A* graph
+export var graph;
+
+// map matrix
+export var matrix;
 
 // store plan classes
 export const planLibrary = [];
@@ -140,7 +146,7 @@ client.onParcelsSensing((perceived_parcels) => {
     if (!new_parcel_sensed) return;
 
     let carriedQty = me.carrying.size;
-    const TRESHOLD = (carriedQty * PARCEL_REWARD_AVG) / 2;
+    const TRESHOLD = (carriedQty * config.PARCEL_REWARD_AVG) / 2;
     let carriedReward = 0;
     if (me.carrying.size > 0) {
         carriedReward = Array.from(me.carrying.values()).reduce(
