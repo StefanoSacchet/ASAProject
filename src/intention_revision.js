@@ -223,16 +223,20 @@ class GoTo extends Plan {
 
             if (res.length == 0) throw ["no path found"]; // if no path found then quit
 
+            let status_x = false;
+            let status_y = false;
+
             // move to each node in the path
             for (let i = 0; i < res.length; i++) {
                 if (this.stopped) throw ["stopped"]; // if stopped then quit
                 let next = res[i];
-                if (next.x > me.x) await client.move("right");
-                else if (next.x < me.x) await client.move("left");
-                if (next.y > me.y) await client.move("up");
-                else if (next.y < me.y) await client.move("down");
-                me.x = next.x;
-                me.y = next.y;
+                if (next.x > me.x) status_x = await client.move("right");
+                else if (next.x < me.x) status_x = await client.move("left");
+                if (next.y > me.y) status_y = await client.move("up");
+                else if (next.y < me.y) status_y = await client.move("down");
+
+                if (status_x) me.x = next.x;
+                if (status_y) me.y = next.y;
             }
         }
 
