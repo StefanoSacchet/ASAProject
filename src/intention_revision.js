@@ -18,20 +18,6 @@ export const parcels = new Map();
 // store perceived agents
 const agents = new Map();
 
-// store map
-const map = {
-    width: undefined,
-    height: undefined,
-    tiles: new Map(),
-    add: function (tile) {
-        const { x, y } = tile;
-        return this.tiles.set(x + 1000 * y, tile);
-    },
-    xy: function (x, y) {
-        return this.tiles.get(x + 1000 * y);
-    },
-};
-
 // A* graph
 var graph;
 
