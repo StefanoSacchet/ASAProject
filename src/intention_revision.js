@@ -1,5 +1,5 @@
 import { astar, Graph } from "../utils/astar.js";
-import { distance, nearestDelivery } from "../utils/functions.js";
+import { distance, nearestDelivery, getCarriedRewardAndTreshold } from "../utils/functions.js";
 import { Plan, IntentionRevisionReplace } from "./classes.js";
 import { me, client, config, map, DEBUG } from "./shared.js";
 
@@ -25,7 +25,7 @@ var graph;
 var matrix;
 
 function updateParcels(perceived_parcels) {
-    //TODO don't remove not expiered parcels
+    //TODO don't remove not expired parcels
     for (const [id, parcel] of parcels.entries()) {
         if (!perceived_parcels.find((p) => p.id === id)) {
             parcels.delete(id);
@@ -127,7 +127,7 @@ client.onAgentsSensing((percieved_agents) => {
  */
 client.onParcelsSensing((perceived_parcels) => {
 
-    // remove expiered parcels and update carriedBy
+    // remove expired parcels and update carriedBy
     updateParcels(perceived_parcels);
 
     // revisit beliefset revision so to trigger option generation only in the case a new parcel is observed
@@ -138,16 +138,9 @@ client.onParcelsSensing((perceived_parcels) => {
     }
     if (!new_parcel_sensed) return;
 
-    let carriedQty = me.carrying.size;
-    const TRESHOLD = (carriedQty * config.PARCEL_REWARD_AVG) / 2;
-    let carriedReward = 0;
-    if (me.carrying.size > 0) {
-        carriedReward = Array.from(me.carrying.values()).reduce(
-            (acc, parcel) => parseInt(acc) + parseInt(parcel.reward),
-            0
-        );
-        // if (DEBUG) console.log("checking carried parcels: ", carriedReward, "TRESHOLD: ", TRESHOLD);
-    }
+    const carriedArray = getCarriedRewardAndTreshold(me, config);
+    const carriedReward = carriedArray[0];
+    const TRESHOLD = carriedArray[1];
 
     // go deliver
     if (carriedReward > TRESHOLD && TRESHOLD !== 0) {
@@ -166,16 +159,27 @@ client.onParcelsSensing((perceived_parcels) => {
 
     /**
      * Options filtering
+     * TODO change this decision
+     * the parcels are picked up in order of which one will give the most reward
+     * when delivery tile is reached
      */
     let best_option;
     let nearest = Number.MAX_VALUE;
+    let deliveryTile = nearestDelivery(me, map);
+    let parcelExpirationDuration = parseInt(config.PARCEL_DECADING_INTERVAL.replace("s", "")) * 1000;
     for (const option of options) {
         if (option[0] == "go_pick_up") {
             let [go_pick_up, x, y, id] = option;
-            let current_d = distance({ x, y }, me);
-            if (current_d < nearest) {
+
+            let parcelDistanceFromMe = distance({ x, y }, me);
+            let parcelDistanceFromDelivery = distance({ x, y }, deliveryTile);
+
+            let parcelValue = parcels.get(id).reward;
+            let parcelFinalValue = parcelValue - (parcelDistanceFromDelivery + parcelDistanceFromMe) * parcelExpirationDuration;
+
+            if (parcelFinalValue < nearest) {
                 best_option = option;
-                nearest = current_d;
+                nearest = parcelDistanceFromMe;
             }
         }
     }
@@ -213,7 +217,7 @@ class GoPickUp extends Plan {
         await client.pickup();
         if (this.stopped) throw ["stopped"];
         else {
-            if (DEBUG) console.log("picked up", id);
+            // if (DEBUG) console.log("picked up", id);
             me.carrying.set(id, parcels.get(id));
             return true;
         }
@@ -229,7 +233,7 @@ function ifAboveDelivery() {
 
 function ifAbovePickup() {
     for (const parcel of parcels.values()) {
-        if (parcel.x == me.x && parcel.y == me.y) {
+        if (parcel.x == me.x && parcel.y == me.y && myAgent.intention_queue[0] != ["patrolling"]) {
             client.pickup();
             me.carrying.set(parcel.id, parcel);
             break;

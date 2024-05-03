@@ -36,16 +36,17 @@ export class IntentionRevision {
 
                 // TODO maybe use a switch statement or a class-based approach
                 // TODO this hard-coded implementation is an example
-                if (intention.predicate[0] == "go_pick_up") {
-                    let id = intention.predicate[3];
-                    let p = parcels.get(id);
-                    if (p && p.carriedBy) {
-                        if (DEBUG) console.log("Skipping intention because no more valid", intention.predicate);
-                        continue;
-                    }
-                } else if (intention.predicate[0] == "patrolling" && config) {
+                // if (intention.predicate[0] == "go_pick_up") {
+                //     let id = intention.predicate[3];
+                //     let p = parcels.get(id);
+                //     if (p && p.carriedBy) {
+                //         if (DEBUG) console.log("Skipping intention because no more valid", intention.predicate);
+                //         continue;
+                //     }
+                // }
+                if (intention.predicate[0] == "patrolling" && config) {
                     // control if the agent is carrying parcels and if the reward can be delivered in time
-                    if (canDeliverInTime(me, config)) {
+                    if (canDeliverContentInTime(me, config)) {
                         // go deliver
                         intention = new Intention(this, ["go_deliver"]);
                     } else {

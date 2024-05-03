@@ -2,10 +2,10 @@ import { DeliverooApi } from "@unitn-asa/deliveroo-js-client";
 
 export const client = new DeliverooApi(
     "http://localhost:8080",
-    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImY2YTA3NzU5OTVlIiwibmFtZSI6InN0ZSIsImlhdCI6MTcxMzg2NzExNn0.6aMQeOP7Bp3Plk5R0sH-shYiECbRfz6K-iOlmAdP-Yw"
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjNiMTJmNWNiMWQ0IiwibmFtZSI6Ikx1Y2EiLCJpYXQiOjE3MTM4NTkwMjN9.s1vkOaMPfnLDhiPsboeEMCsgdLS5JF_NLiwWvTMLHj8"
 );
 
-export const DEBUG = false;
+export const DEBUG = true;
 
 // store agent state
 export const me = { carrying: new Map() };

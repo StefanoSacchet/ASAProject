@@ -3,9 +3,12 @@ import { DEBUG, map } from "../src/shared.js";
 import { astar } from "./astar.js";
 
 export function distance({ x: x1, y: y1 }, { x: x2, y: y2 }) {
-    const dx = Math.abs(Math.round(x1) - Math.round(x2));
-    const dy = Math.abs(Math.round(y1) - Math.round(y2));
-    return dx + dy;
+    // const dx = Math.abs(Math.round(x1) - Math.round(x2));
+    // const dy = Math.abs(Math.round(y1) - Math.round(y2));
+    // return dx + dy;
+    const start = graph.grid[Math.round(x1)][Math.round(y1)];
+    const end = graph.grid[Math.round(x2)][Math.round(y2)];
+    return astar.search(graph, start, end).length; // A* search
 }
 
 export function nearestDelivery({ x, y }, map) {
@@ -24,7 +27,7 @@ export function getCarriedRewardAndTreshold(me, config) {
             (acc, parcel) => (parcel && parcel.reward ? parseInt(acc) + parseInt(parcel.reward) : acc),
             0
         );
-        if (DEBUG) console.log("checking carried parcels: ", carriedReward, "TRESHOLD: ", TRESHOLD);
+        // if (DEBUG) console.log("checking carried parcels: ", carriedReward, "TRESHOLD: ", TRESHOLD);
     }
     return [carriedReward, TRESHOLD];
 }
