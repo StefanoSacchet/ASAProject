@@ -93,7 +93,6 @@ if agent.x = 2.6 --> he's moving from 2 to 3
 if agent.x = 2.4 --> he's moving from 3 to 2
 */
 client.onAgentsSensing((percieved_agents) => {
-
     updateAgents(percieved_agents);
 
     if (!matrix && !graph) return;
@@ -126,7 +125,6 @@ client.onAgentsSensing((percieved_agents) => {
  * Options generation and filtering function
  */
 client.onParcelsSensing((perceived_parcels) => {
-
     // remove expired parcels and update carriedBy
     updateParcels(perceived_parcels);
 
@@ -175,7 +173,8 @@ client.onParcelsSensing((perceived_parcels) => {
             let parcelDistanceFromDelivery = distance({ x, y }, deliveryTile);
 
             let parcelValue = parcels.get(id).reward;
-            let parcelFinalValue = parcelValue - (parcelDistanceFromDelivery + parcelDistanceFromMe) * parcelExpirationDuration;
+            let parcelFinalValue =
+                parcelValue - (parcelDistanceFromDelivery + parcelDistanceFromMe) * parcelExpirationDuration;
 
             if (parcelFinalValue < nearest) {
                 best_option = option;
@@ -288,23 +287,14 @@ class Patrolling extends Plan {
     async execute(patrolling) {
         if (this.stopped) throw ["stopped"]; // if stopped then quit
 
-        //TODO fix this
-        // move away from other agents
-        // let tile;
-        // for (const agent of agents.values()) {
-        //     if (this.stopped) throw ["stopped"]; // if stopped then quit
-        //     if (agent.id == me.id) continue;
-        //     // call subintention go_to random tile away from agent
-        //     tile = map.tiles.get(agent.x + 1 + 1000 * agent.y);
-        //     if (tile) break;
-        // }
-
-        // await this.subIntention(["go_to", tile.x, tile.y]);
-        // if (this.stopped) throw ["stopped"]; // if stopped then quit
-
         let i = Math.round(Math.random() * map.tiles.size);
         let tile = Array.from(map.tiles.values()).at(i);
         if (tile) await this.subIntention(["go_to", tile.x, tile.y]);
+
+        // const randomTile = Array.from(map.deliveryTiles.values())[Math.floor(Math.random() * map.deliveryTiles.size)];
+        // //TODO choose a tile near the chosen delivery tile
+        // await this.subIntention(["go_to", randomTile.x, randomTile.y]);
+
         if (this.stopped) throw ["stopped"]; // if stopped then quit
         return true;
     }

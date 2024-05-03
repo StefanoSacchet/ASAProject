@@ -33,6 +33,9 @@ export function getCarriedRewardAndTreshold(me, config) {
 }
 
 export function canDeliverContentInTime(me, config) {
+
+    if (!me || me.x === undefined || me.y === undefined || !graph) return false;
+
     let deliveryTile = nearestDelivery(me, map);
     let carriedReward = getCarriedRewardAndTreshold(me, config)[0];
 
