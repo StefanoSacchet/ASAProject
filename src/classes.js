@@ -1,6 +1,7 @@
 import { canDeliverContentInTime } from "../utils/functions.js";
 import { parcels, planLibrary } from "./intention_revision.js";
-import { me, PARCEL_REWARD_AVG, config, client, DEBUG } from "./shared.js";
+import { me, PARCEL_REWARD_AVG, config, DEBUG } from "./shared.js";
+import { client } from "../deliverooApi/connection.js";
 
 /**
  * Intention revision loop
@@ -49,13 +50,13 @@ export class IntentionRevision {
                     if (canDeliverContentInTime(me, config)) {
                         // go deliver
                         intention = new Intention(this, ["go_deliver"]);
-                    } else {
+                    } // else {
                         // drop parcels and keep patrolling
-                        await client.putdown();
+                        // await client.putdown();
 
                         // empty carrying
-                        me.carrying.clear();
-                    }
+                        // me.carrying.clear();
+                    // }
                 }
 
                 // Start achieving intention
