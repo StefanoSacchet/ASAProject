@@ -244,7 +244,7 @@ function ifAboveDelivery() {
 
 function ifAbovePickup() {
     for (const parcel of parcels.values()) {
-        if (parcel.x == me.x && parcel.y == me.y && myAgent.intention_queue[0] != ["patrolling"]) {
+        if (parcel.x == me.x && parcel.y == me.y && myAgent.intention_queue[0] == ["go_to"]) {
             client.pickup();
             me.carrying.set(parcel.id, parcel);
             break;

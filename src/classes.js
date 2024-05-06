@@ -1,4 +1,4 @@
-import { canDeliverContentInTime, findBestParcel, getCarriedRewardAndTreshold, distance } from "../utils/functions.js";
+import { canDeliverContentInTime, findBestParcel, getCarriedRewardAndTreshold, distance, findAndPickUpNearParcels } from "../utils/functions.js";
 import { parcels, planLibrary } from "./intention_revision.js";
 import { me, PARCEL_REWARD_AVG, config, client, DEBUG } from "./shared.js";
 
@@ -62,6 +62,14 @@ export class IntentionRevision {
                         // empty carrying
                         me.carrying.clear();
                     }
+                    
+                    // check if new parcels have spawned near the agent
+                    let new_intention = findAndPickUpNearParcels(me, parcels, config);
+                    if (new_intention) {
+                        this.intention_queue.push(new_intention);
+                        this.intention_queue.shift();
+                        continue;
+                    }
                 }
                 if (intention.predicate[0] == "go_deliver" && config) {
                     // if (DEBUG) console.log("me.carrying", me.carrying);
@@ -75,65 +83,11 @@ export class IntentionRevision {
                         me.carrying.clear();
                     }
                     
-                    if (DEBUG) console.log("Checking if any new parcels can be picked up.");
-                    // if new parcels are around when delivering, control if taking them gets a higher reward
-                    // save current carrying
-                    let me_carrying_old = new Map(me.carrying);
-                    // create new carrying to insert future best parel in
-                    let me_carrying_new = new Map(me.carrying);
-
-                    // get best option (parcel)
-                    let best_option = findBestParcel(me, parcels, parcels, config);
-                    if (best_option && me.carrying.size < 3) {
-                        if (DEBUG) console.log("Best parcel that can be picked up is:", best_option);
-
-                        let best_option_id = best_option[3];
-                        let best_option_x = best_option[1];
-                        let best_option_y = best_option[2];
-                        
-                        let parcelExpirationDuration;
-                        if (config.PARCEL_DECADING_INTERVAL == "infinite") {
-                            parcelExpirationDuration = 0;
-                        } else {
-                            parcelExpirationDuration = parseInt(config.PARCEL_DECADING_INTERVAL.replace("s", "")) * 1000;
-                        }
-
-                        let best_option_p = parcels.get(best_option_id);
-                        if(!best_option_p && DEBUG) console.log("parcel not found!!!");
-                        console.log("parcels:", parcels);
-                        console.log("dist:", distance({ x:best_option_x, y:best_option_y }, me));
-                        console.log("expiration:", parcelExpirationDuration);
-                        best_option_p.reward = best_option_p.reward * parcelExpirationDuration - distance({ x:best_option_x, y:best_option_y }, me) * 2 * config.MOVEMENT_DURATION;
-                        best_option_p.reward = best_option_p.reward / 1000;
-                        let best_option_reward = best_option_p.reward;
-
-                        // set best option in new carrying
-                        me_carrying_new.set(best_option_id, best_option_p);
-                        me.carrying = me_carrying_new;
-                        let newParcelIsDeliverable = canDeliverContentInTime(me, config);
-                        let newParcelCarriedRewardAndTreshold = getCarriedRewardAndTreshold(me, config);
-                        console.log("new carrying:", me.carrying);
-                        console.log("deliverable in time:", newParcelIsDeliverable);
-                        console.log("carried reward:", newParcelCarriedRewardAndTreshold[0]);
-                        me.carrying = me_carrying_old;
-
-                        if (newParcelIsDeliverable) {
-                            // if content is still deliverable, compare the reward of the new carrying with the old one
-                            let oldParcelCarriedRewardAndTreshold = getCarriedRewardAndTreshold(me, config);
-                            if (DEBUG) console.log("Taking new parcel has total reward:", newParcelCarriedRewardAndTreshold);
-                            if (DEBUG) console.log("Ignoring parcel has total reward:", oldParcelCarriedRewardAndTreshold);
-                            if (newParcelCarriedRewardAndTreshold[0] > oldParcelCarriedRewardAndTreshold[0]) {
-                                // if the new carrying has a higher reward, deliver the old parcels and pick up the new one
-                                // pick up new parcel
-                                let new_intention = new Intention(this, ["go_pick_up", best_option_x, best_option_y, best_option_id]);
-                                this.intention_queue.push(new_intention);
-                                this.intention_queue.shift();
-                                if (DEBUG) console.log("A new package can be picked up. New intention:", intention);
-                                continue;
-                            } else {
-                                if (DEBUG) console.log("New parcel would not bring better reward.");
-                            }
-                        }
+                    let new_intention = findAndPickUpNearParcels(me, parcels, config);
+                    if (new_intention) {
+                        this.intention_queue.push(new_intention);
+                        this.intention_queue.shift();
+                        continue;
                     }
                     
                 }
