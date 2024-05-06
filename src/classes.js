@@ -81,6 +81,8 @@ export class IntentionRevision {
 
                         // empty carrying
                         me.carrying.clear();
+                        this.intention_queue.shift();
+                        continue;
                     }
                     
                     let new_intention = findAndPickUpNearParcels(me, parcels, config);

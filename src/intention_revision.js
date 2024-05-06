@@ -220,16 +220,16 @@ class GoPickUp extends Plan {
             // if (DEBUG) console.log("picked up", id);
             me.carrying.set(id, parcels.get(id));
             parcels.get(id).carriedBy = me.id;
-            const carriedArray = getCarriedRewardAndTreshold(me, config);
-            const carriedReward = carriedArray[0];
-            const TRESHOLD = carriedArray[1];
+            // const carriedArray = getCarriedRewardAndTreshold(me, config);
+            // const carriedReward = carriedArray[0];
+            // const TRESHOLD = carriedArray[1];
         
-            // go deliver
-            if (carriedReward > TRESHOLD && TRESHOLD !== 0) {
-                // if (DEBUG) console.log("go_deliver");
-                myAgent.push(["go_deliver"]);
-                return;
-            }
+            // // go deliver
+            // if (carriedReward > TRESHOLD && TRESHOLD !== 0) {
+            //     // if (DEBUG) console.log("go_deliver");
+            //     myAgent.push(["go_deliver"]);
+            //     return;
+            // }
             return true;
         }
     }
