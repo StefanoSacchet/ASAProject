@@ -32,15 +32,16 @@ function updateParcels(perceived_parcels) {
             me.carrying.delete(id);
         } else {
             // update carriedBy
-            if (parcel.carriedBy && parcel.carriedBy.id === me.id) {
-                parcel.carriedBy = me;
+            if (parcel.carriedBy && parcel.carriedBy === me.id) {
+                parcel.carriedBy = me.id;
             }
             // update me.carrying
             if (me.carrying.has(id)) {
                 me.carrying.set(id, parcel);
+                parcel.carriedBy = me.id;
             }
             // update me.carrying if found in parcels but not in me.carrying
-            if (parcel.carriedBy && parcel.carriedBy.id === me.id) {
+            if (parcel.carriedBy && parcel.carriedBy === me.id) {
                 me.carrying.set(id, parcel);
             }
             // if (DEBUG) console.log("me.carrying", me.carrying);
@@ -218,6 +219,17 @@ class GoPickUp extends Plan {
         else {
             // if (DEBUG) console.log("picked up", id);
             me.carrying.set(id, parcels.get(id));
+            parcels.get(id).carriedBy = me.id;
+            const carriedArray = getCarriedRewardAndTreshold(me, config);
+            const carriedReward = carriedArray[0];
+            const TRESHOLD = carriedArray[1];
+        
+            // go deliver
+            if (carriedReward > TRESHOLD && TRESHOLD !== 0) {
+                // if (DEBUG) console.log("go_deliver");
+                myAgent.push(["go_deliver"]);
+                return;
+            }
             return true;
         }
     }

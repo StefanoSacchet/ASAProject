@@ -39,7 +39,7 @@ export function canDeliverContentInTime(me, config) {
     let deliveryTile = nearestDelivery(me, map);
     let carriedReward = getCarriedRewardAndTreshold(me, config)[0];
 
-    const start = graph.grid[me.x][me.y];
+    const start = graph.grid[Math.round(me.x)][Math.round(me.y)];
     const end = graph.grid[deliveryTile.x][deliveryTile.y];
     const distanceFromDeliveryTile = astar.search(graph, start, end); // A* search
 
@@ -68,4 +68,47 @@ export function canDeliverContentInTime(me, config) {
     }
 
     return false;
+}
+
+export function findBestParcel(me, perceived_parcels, parcels, config) {
+    const options = [];
+    for (const parcel of perceived_parcels.values())
+        if (!parcel.carriedBy) options.push(["go_pick_up", parcel.x, parcel.y, parcel.id]);
+
+    /**
+     * Options filtering
+     * TODO change this decision
+     * the parcels are picked up in order of which one will give the most reward
+     * when delivery tile is reached
+     */
+    let best_option;
+    let nearest = Number.MAX_VALUE;
+
+    let parcelExpirationDuration;
+    // TODO set this check in the official version too
+    if (config.PARCEL_DECADING_INTERVAL == "infinite") {
+        parcelExpirationDuration = 0;
+    } else {
+        parcelExpirationDuration = parseInt(config.PARCEL_DECADING_INTERVAL.replace("s", "")) * 1000;
+    }
+    for (const option of options) {
+        if (option[0] == "go_pick_up") {
+            let [go_pick_up, x, y, id] = option;
+            let deliveryTile = nearestDelivery({x, y}, map);
+            
+            let parcelDistanceFromMe = distance({ x, y }, me);
+            let parcelDistanceFromDelivery = distance({ x, y }, deliveryTile);
+
+            let parcelValue = parcels.get(id).reward;
+            let parcelFinalValue =
+                parcelValue - (parcelDistanceFromDelivery + parcelDistanceFromMe) * parcelExpirationDuration;
+
+            if (parcelFinalValue < nearest) {
+                best_option = option;
+                nearest = parcelDistanceFromMe;
+            }
+        }
+    }
+
+    return best_option;
 }
