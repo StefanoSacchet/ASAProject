@@ -12,10 +12,15 @@ export class IntentionRevision {
         return this.#intention_queue;
     }
 
+    idle = ["patrolling"];
+    isIdle = false;
+
     async loop() {
         while (true) {
             // Consumes intention_queue if not empty
             if (this.intention_queue.length > 0) {
+                this.isIdle = false;
+                
                 if (DEBUG)
                     console.log(
                         "intentionRevision.loop",
@@ -48,6 +53,7 @@ export class IntentionRevision {
                 if (intention.predicate[0] == "patrolling" && config) {
                     // control if the agent is carrying parcels and if the reward can be delivered in time
                     if (canDeliverContentInTime(me, config)) {
+                    // if (me.carrying.size > 0) {
                         // go deliver
                         intention = new Intention(this, ["go_deliver"]);
                     } // else {
@@ -71,6 +77,7 @@ export class IntentionRevision {
                 this.intention_queue.shift();
             } else {
                 this.push(this.idle);
+                this.isIdle = true;
             }
             // Postpone next iteration at setImmediate
             await new Promise((res) => setImmediate(res));

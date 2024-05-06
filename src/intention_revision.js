@@ -175,6 +175,11 @@ client.onParcelsSensing((perceived_parcels) => {
     // remove expired parcels and update carriedBy
     updateParcels(perceived_parcels);
 
+    if (myAgent.isIdle && me.carrying.size > 0) {
+        myAgent.push(["go_deliver"]);
+        return;
+    }
+
     // revisit beliefset revision so to trigger option generation only in the case a new parcel is observed
     let new_parcel_sensed = false;
     for (const p of perceived_parcels) {
@@ -227,7 +232,7 @@ client.onParcelsSensing((perceived_parcels) => {
 
 // const myAgent = new IntentionRevisionQueue();
 const myAgent = new IntentionRevisionReplace();
-myAgent.idle = ["patrolling"];
+// myAgent.idle = ["patrolling"];
 // const myAgent = new IntentionRevisionRevise();
 myAgent.loop();
 
@@ -252,14 +257,19 @@ class GoPickUp extends Plan {
 
 function ifAboveDelivery() {
     if (me.carrying.size > 0) {
-        let deliveryTile = nearestDelivery(me, map);
-        if (me.x == deliveryTile.x && me.y == deliveryTile.y) client.putdown();
+        for (const deliveryTile of map.deliveryTiles.values()) {
+            if (me.x == deliveryTile.x && me.y == deliveryTile.y) {
+                client.putdown();
+                me.carrying.clear();
+                break;
+            }
+        }
     }
 }
 
 function ifAbovePickup() {
     for (const parcel of parcels.values()) {
-        if (parcel.x == me.x && parcel.y == me.y && myAgent.intention_queue[0] != ["patrolling"]) {
+        if (parcel.x == me.x && parcel.y == me.y) {
             client.pickup();
             me.carrying.set(parcel.id, parcel);
             break;
@@ -314,14 +324,14 @@ class Patrolling extends Plan {
     async execute(patrolling) {
         if (this.stopped) throw ["stopped"]; // if stopped then quit
 
-        // let i = Math.round(Math.random() * map.tiles.size);
-        // let tile = Array.from(map.tiles.values()).at(i);
-        // if (tile) await this.subIntention(["go_to", tile.x, tile.y]);
+        let i = Math.round(Math.random() * map.tiles.size);
+        let tile = Array.from(map.tiles.values()).at(i);
+        if (tile) await this.subIntention(["go_to", tile.x, tile.y]);
 
         // TODO choose a tile near the chosen delivery tile
-        const i = Math.round(Math.random() * map.deliveryTiles.size);
-        const randomTile = Array.from(map.deliveryTiles.values()).at(i);
-        if (randomTile) await this.subIntention(["go_to", randomTile.x, randomTile.y]);
+        // const i = Math.round(Math.random() * map.deliveryTiles.size);
+        // const randomTile = Array.from(map.deliveryTiles.values()).at(i);
+        // if (randomTile) await this.subIntention(["go_to", randomTile.x, randomTile.y]);
 
         if (this.stopped) throw ["stopped"]; // if stopped then quit
         return true;
