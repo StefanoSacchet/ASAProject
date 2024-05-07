@@ -89,7 +89,7 @@ function chooseBestOption(options, me, map, parcels, config) {
     return best_option;
 }
 
-function chooseBestOtionV2(options, me, map, parcels, config) {
+function chooseBestOtionV2(options, me, parcels) {
     // set a score for each option based on its reward and distance from me
     const PENALTY_DISTANCE = 2;
     let best_option;
@@ -176,11 +176,6 @@ client.onParcelsSensing((perceived_parcels) => {
     // remove expired parcels and update carriedBy
     updateParcels(perceived_parcels);
 
-    if (myAgent.isIdle && me.carrying.size > 0) {
-        myAgent.push(["go_deliver"]);
-        return;
-    }
-
     // revisit beliefset revision so to trigger option generation only in the case a new parcel is observed
     let new_parcel_sensed = false;
     for (const p of perceived_parcels) {
@@ -214,7 +209,7 @@ client.onParcelsSensing((perceived_parcels) => {
      * the parcels are picked up in order of which one will give the most reward
      * when delivery tile is reached
      */
-    const bestOption = chooseBestOtionV2(options, me, map, parcels, config);
+    const bestOption = chooseBestOtionV2(options, me, parcels);
 
     /**
      * Best option is selected
@@ -281,7 +276,7 @@ function ifAboveDelivery() {
 
 function ifAbovePickup() {
     for (const parcel of parcels.values()) {
-        if (parcel.x == me.x && parcel.y == me.y && myAgent.intention_queue[0] == ["go_to"]) {
+        if (parcel.x == me.x && parcel.y == me.y) {
             client.pickup();
             me.carrying.set(parcel.id, parcel);
             break;
