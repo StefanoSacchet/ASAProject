@@ -51,8 +51,15 @@ export class IntentionRevision {
                     }
                 }
                 if (intention.predicate[0] == "patrolling" && config) {
+                    // check if new parcels have spawned near the agent
+                    let new_intention = findAndPickUpNearParcels(me, parcels, config);
+                    if (new_intention) {
+                        this.intention_queue.push(new_intention);
+                        this.intention_queue.shift();
+                        continue;
+                    }
                     // control if the agent is carrying parcels and if the reward can be delivered in time
-                    if (canDeliverContentInTime(me, config)) {
+                    if (me.carrying.size > 0 && canDeliverContentInTime(me, config)) {
                         if (DEBUG) console.log("Patrolling state entered while packages can be delivered, delivering them.");
                         // go deliver
                         let new_intention = new Intention(this, ["go_deliver"]);
@@ -67,14 +74,6 @@ export class IntentionRevision {
                     //     // empty carrying
                     //     me.carrying.clear();
                     // }
-                    
-                    // check if new parcels have spawned near the agent
-                    let new_intention = findAndPickUpNearParcels(me, parcels, config);
-                    if (new_intention) {
-                        this.intention_queue.push(new_intention);
-                        this.intention_queue.shift();
-                        continue;
-                    }
                 }
                 if (intention.predicate[0] == "go_deliver" && config) {
                     // if (DEBUG) console.log("me.carrying", me.carrying);

@@ -47,7 +47,7 @@ export function getCarriedRewardAndTreshold(me, config) {
 }
 
 export function canDeliverContentInTime(me, config) {
-    if (!me || me.x == undefined || me.y == undefined || graph.grid === undefined) return false;
+    if (!me || me.x == undefined || me.y == undefined || graph.grid === undefined || me.carrying.size == 0) return false;
 
     let deliveryTile = nearestDelivery(me, map);
     let carriedReward = getCarriedRewardAndTreshold(me, config)[0];
@@ -88,6 +88,8 @@ export function findBestParcel(me, perceived_parcels, parcels, config) {
     const options = [];
     for (const parcel of perceived_parcels.values())
         if (!parcel.carriedBy) options.push(["go_pick_up", parcel.x, parcel.y, parcel.id]);
+
+    if (DEBUG) console.log("Options for picking up parcels:", options);
 
     /**
      * Options filtering
@@ -130,7 +132,7 @@ export function findBestParcel(me, perceived_parcels, parcels, config) {
             }
         }
     }
-
+    if (DEBUG) console.log("Best parcel that can be picked up is:", best_option);
     return best_option;
 }
 
