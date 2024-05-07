@@ -12,10 +12,23 @@ export function distance({ x: x1, y: y1 }, { x: x2, y: y2 }) {
     return astar.search(graph, start, end).length; // A* search
 }
 
+// export function nearestDelivery({ x, y }, map) {
+//     return Array.from(map.tiles.values())
+//         .filter(({ delivery }) => delivery)
+//         .sort((a, b) => distance(a, { x, y }) - distance(b, { x, y }))[0];
+// }
+
 export function nearestDelivery({ x, y }, map) {
-    return Array.from(map.tiles.values())
-        .filter(({ delivery }) => delivery)
-        .sort((a, b) => distance(a, { x, y }) - distance(b, { x, y }))[0];
+    let minDistance = Infinity;
+    let deliveryTile = null;
+    for (const tile of map.deliveryTiles.values()) {
+        const d = distance({ x, y }, tile);
+        if (d < minDistance) {
+            minDistance = d;
+            deliveryTile = tile;
+        }
+    }
+    return deliveryTile;
 }
 
 export function getCarriedRewardAndTreshold(me, config) {
@@ -34,8 +47,7 @@ export function getCarriedRewardAndTreshold(me, config) {
 }
 
 export function canDeliverContentInTime(me, config) {
-
-    if (!me || me.x === undefined || me.y === undefined || !graph) return false;
+    if (!me || me.x == undefined || me.y == undefined || graph.gird === undefined) return false;
 
     let deliveryTile = nearestDelivery(me, map);
     let carriedReward = getCarriedRewardAndTreshold(me, config)[0];

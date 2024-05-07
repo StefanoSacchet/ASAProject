@@ -1,10 +1,10 @@
-build
 node_modules
 package-lock.json
 
 .vscode
-
 .env
+
+deliverooApi
 
 .DS_Store
 */.DS_Store

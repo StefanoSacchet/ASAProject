@@ -1,6 +1,7 @@
 import { canDeliverContentInTime, findBestParcel, getCarriedRewardAndTreshold, distance, findAndPickUpNearParcels } from "../utils/functions.js";
 import { parcels, planLibrary } from "./intention_revision.js";
-import { me, PARCEL_REWARD_AVG, config, client, DEBUG } from "./shared.js";
+import { me, PARCEL_REWARD_AVG, config, DEBUG } from "./shared.js";
+import { client } from "../deliverooApi/connection.js";
 
 /**
  * Intention revision loop
@@ -11,10 +12,15 @@ export class IntentionRevision {
         return this.#intention_queue;
     }
 
+    idle = ["patrolling"];
+    isIdle = false;
+
     async loop() {
         while (true) {
             // Consumes intention_queue if not empty
             if (this.intention_queue.length > 0) {
+                this.isIdle = false;
+                
                 if (DEBUG)
                     console.log(
                         "intentionRevision.loop",
@@ -57,7 +63,7 @@ export class IntentionRevision {
                     } else {
                         if (DEBUG) console.log("Patrolling state entered while packages carried but cannot be delivered, dropping them.");
                         // drop parcels and keep patrolling
-                        await client.putdown();
+                        // await client.putdown();
 
                         // empty carrying
                         me.carrying.clear();
@@ -106,6 +112,7 @@ export class IntentionRevision {
                 this.intention_queue.shift();
             } else {
                 this.push(this.idle);
+                this.isIdle = true;
             }
             // Postpone next iteration at setImmediate
             await new Promise((res) => setImmediate(res));

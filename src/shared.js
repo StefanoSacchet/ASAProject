@@ -1,9 +1,4 @@
-import { DeliverooApi } from "@unitn-asa/deliveroo-js-client";
-
-export const client = new DeliverooApi(
-    "http://localhost:8080",
-    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImQ4NzBjZTY1OThkIiwibmFtZSI6InN0ZSIsImlhdCI6MTcxNTAzMTE4OX0.sTbi-WlgNbKzxwAHNkjBMawXYeJef0QDnUTmKrGxa-I"
-);
+import { client } from "../deliverooApi/connection.js";
 
 export const DEBUG = true;
 
@@ -19,6 +14,7 @@ export const map = {
     width: undefined,
     height: undefined,
     tiles: new Map(),
+    deliveryTiles: new Map(),
     add: function (tile) {
         const { x, y } = tile;
         return this.tiles.set(x + 1000 * y, tile);

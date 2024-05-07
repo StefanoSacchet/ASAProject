@@ -1,7 +1,8 @@
 import { astar, Graph } from "../utils/astar.js";
 import { distance, nearestDelivery, getCarriedRewardAndTreshold } from "../utils/functions.js";
 import { Plan, IntentionRevisionReplace } from "./classes.js";
-import { me, client, config, map, DEBUG } from "./shared.js";
+import { me, config, map, DEBUG } from "./shared.js";
+import { client } from "../deliverooApi/connection.js";
 
 // A* graph
 export var graph;
@@ -62,12 +63,63 @@ function updateAgents(percieved_agents) {
     });
 }
 
+function chooseBestOption(options, me, map, parcels, config) {
+    let best_option;
+    let nearest = Number.MAX_VALUE;
+    const deliveryTile = nearestDelivery(me, map);
+    const parcelExpiration_ms = parseInt(config.PARCEL_DECADING_INTERVAL.replace("s", "")) * 1000;
+    for (const option of options) {
+        if (option[0] == "go_pick_up") {
+            let [go_pick_up, x, y, id] = option;
+
+            let parcelDistanceFromMe = distance({ x, y }, me);
+            let parcelDistanceFromDelivery = distance({ x, y }, deliveryTile);
+
+            let parcelValue = parcels.get(id).reward;
+            let parcelFinalValue =
+                parcelValue - (parcelDistanceFromDelivery + parcelDistanceFromMe) * parcelExpiration_ms;
+
+            if (parcelFinalValue < nearest) {
+                best_option = option;
+                nearest = parcelDistanceFromMe;
+            }
+        }
+    }
+
+    return best_option;
+}
+
+function chooseBestOtionV2(options, me, map, parcels, config) {
+    // set a score for each option based on its reward and distance from me
+    const PENALTY_DISTANCE = 2;
+    let best_option;
+    let best_score = Number.MIN_VALUE;
+    for (const option of options) {
+        if (option[0] !== "go_pick_up") continue;
+
+        const [go_pick_up, x, y, id] = option;
+
+        const parcelDistanceFromMe = distance({ x, y }, me);
+
+        const parcelValue = parcels.get(id).reward;
+        const score = parcelValue - parcelDistanceFromMe * PENALTY_DISTANCE;
+
+        if (score > best_score) {
+            best_option = option;
+            best_score = score;
+        }
+    }
+
+    return best_option;
+}
+
 client.onMap((width, height, tiles) => {
     // store map
     map.width = width;
     map.height = height;
     for (const t of tiles) {
         map.add(t);
+        if (t.delivery) map.deliveryTiles.set(t.x + 1000 * t.y, t);
     }
 
     // create graph for A*
@@ -96,25 +148,20 @@ if agent.x = 2.4 --> he's moving from 3 to 2
 client.onAgentsSensing((percieved_agents) => {
     updateAgents(percieved_agents);
 
-    if (!matrix && !graph) return;
-
-    let matrix_changed = false;
+    if (!graph) return;
 
     // change back to 1 where there is a tile
     map.tiles.forEach((tile) => {
-        matrix[tile.x][tile.y] = 1;
-        matrix_changed = true;
+        graph.grid[tile.x][tile.y].weight = 1;
     });
+
     // remove tiles where there is an agent
     agents.forEach((agent) => {
         // check if value is .6 or .4
-        let x = Math.round(agent.x);
-        let y = Math.round(agent.y);
-        matrix[x][y] = 0;
-        matrix_changed = true;
+        const x = Math.round(agent.x);
+        const y = Math.round(agent.y);
+        graph.grid[x][y].weight = 0;
     });
-
-    if (matrix_changed) graph = new Graph(matrix);
 });
 
 // setTimeout(() => {
@@ -128,6 +175,11 @@ client.onAgentsSensing((percieved_agents) => {
 client.onParcelsSensing((perceived_parcels) => {
     // remove expired parcels and update carriedBy
     updateParcels(perceived_parcels);
+
+    if (myAgent.isIdle && me.carrying.size > 0) {
+        myAgent.push(["go_deliver"]);
+        return;
+    }
 
     // revisit beliefset revision so to trigger option generation only in the case a new parcel is observed
     let new_parcel_sensed = false;
@@ -162,33 +214,13 @@ client.onParcelsSensing((perceived_parcels) => {
      * the parcels are picked up in order of which one will give the most reward
      * when delivery tile is reached
      */
-    let best_option;
-    let nearest = Number.MAX_VALUE;
-    let deliveryTile = nearestDelivery(me, map);
-    let parcelExpirationDuration = parseInt(config.PARCEL_DECADING_INTERVAL.replace("s", "")) * 1000;
-    for (const option of options) {
-        if (option[0] == "go_pick_up") {
-            let [go_pick_up, x, y, id] = option;
-
-            let parcelDistanceFromMe = distance({ x, y }, me);
-            let parcelDistanceFromDelivery = distance({ x, y }, deliveryTile);
-
-            let parcelValue = parcels.get(id).reward;
-            let parcelFinalValue =
-                parcelValue - (parcelDistanceFromDelivery + parcelDistanceFromMe) * parcelExpirationDuration;
-
-            if (parcelFinalValue < nearest) {
-                best_option = option;
-                nearest = parcelDistanceFromMe;
-            }
-        }
-    }
+    const bestOption = chooseBestOtionV2(options, me, map, parcels, config);
 
     /**
      * Best option is selected
      */
-    if (best_option) {
-        myAgent.push(best_option);
+    if (bestOption) {
+        myAgent.push(bestOption);
     }
     // else myAgent.push(["patrolling"]);
 });
@@ -201,7 +233,7 @@ client.onParcelsSensing((perceived_parcels) => {
 
 // const myAgent = new IntentionRevisionQueue();
 const myAgent = new IntentionRevisionReplace();
-myAgent.idle = ["patrolling"];
+// myAgent.idle = ["patrolling"];
 // const myAgent = new IntentionRevisionRevise();
 myAgent.loop();
 
@@ -237,8 +269,13 @@ class GoPickUp extends Plan {
 
 function ifAboveDelivery() {
     if (me.carrying.size > 0) {
-        let deliveryTile = nearestDelivery(me, map);
-        if (me.x == deliveryTile.x && me.y == deliveryTile.y) client.putdown();
+        for (const deliveryTile of map.deliveryTiles.values()) {
+            if (me.x == deliveryTile.x && me.y == deliveryTile.y) {
+                client.putdown();
+                me.carrying.clear();
+                break;
+            }
+        }
     }
 }
 
@@ -303,9 +340,10 @@ class Patrolling extends Plan {
         let tile = Array.from(map.tiles.values()).at(i);
         if (tile) await this.subIntention(["go_to", tile.x, tile.y]);
 
-        // const randomTile = Array.from(map.deliveryTiles.values())[Math.floor(Math.random() * map.deliveryTiles.size)];
-        // //TODO choose a tile near the chosen delivery tile
-        // await this.subIntention(["go_to", randomTile.x, randomTile.y]);
+        // TODO choose a tile near the chosen delivery tile
+        // const i = Math.round(Math.random() * map.deliveryTiles.size);
+        // const randomTile = Array.from(map.deliveryTiles.values()).at(i);
+        // if (randomTile) await this.subIntention(["go_to", randomTile.x, randomTile.y]);
 
         if (this.stopped) throw ["stopped"]; // if stopped then quit
         return true;
