@@ -19,12 +19,6 @@ export const parcels = new Map();
 // store perceived agents
 const agents = new Map();
 
-// A* graph
-var graph;
-
-// map matrix
-var matrix;
-
 function updateParcels(perceived_parcels) {
     //TODO don't remove not expired parcels
     for (const [id, parcel] of parcels.entries()) {

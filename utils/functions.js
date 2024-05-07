@@ -47,7 +47,7 @@ export function getCarriedRewardAndTreshold(me, config) {
 }
 
 export function canDeliverContentInTime(me, config) {
-    if (!me || me.x == undefined || me.y == undefined || graph.gird === undefined) return false;
+    if (!me || me.x == undefined || me.y == undefined || graph.grid === undefined) return false;
 
     let deliveryTile = nearestDelivery(me, map);
     let carriedReward = getCarriedRewardAndTreshold(me, config)[0];
@@ -62,6 +62,7 @@ export function canDeliverContentInTime(me, config) {
     var timeForCarriedExpiration;
     if (config) {
         if (config.PARCEL_DECADING_INTERVAL == "infinite") {
+            return true;
             timeForCarriedExpiration = timeToDeliver + 1;
         } else {
             // convert "1s", "2s", "3s" to 1, 2, 3 removing the s
@@ -109,15 +110,20 @@ export function findBestParcel(me, perceived_parcels, parcels, config) {
     for (const option of options) {
         if (option[0] == "go_pick_up") {
             let [go_pick_up, x, y, id] = option;
-            let deliveryTile = nearestDelivery({x, y}, map);
-            
+            let deliveryTile = nearestDelivery({ x, y }, map);
+
             let parcelDistanceFromMe = distance({ x, y }, me);
             let parcelDistanceFromDelivery = distance({ x, y }, deliveryTile);
 
             let parcelValue = parcels.get(id).reward;
-            let parcelFinalValue =
-                parcelValue * parcelExpirationDuration - (parcelDistanceFromDelivery + parcelDistanceFromMe) * config.MOVEMENT_DURATION * notInfinite;
-
+            let parcelFinalValue;
+            if (notInfinite) {
+                parcelFinalValue =
+                    parcelValue * parcelExpirationDuration -
+                    (parcelDistanceFromDelivery + parcelDistanceFromMe) * config.MOVEMENT_DURATION * notInfinite;
+            } else {
+                parcelFinalValue = parcelValue - 2 * parcelDistanceFromMe;
+            }
             if (parcelFinalValue > best_parcel_value) {
                 best_option = option;
                 best_parcel_value = parcelDistanceFromMe;
@@ -129,7 +135,6 @@ export function findBestParcel(me, perceived_parcels, parcels, config) {
 }
 
 export function findAndPickUpNearParcels(me, parcels, config) {
-    
     if (DEBUG) console.log("Checking if any new parcels can be picked up.");
     // if new parcels are around when delivering, control if taking them gets a higher reward
     // save current carrying
@@ -145,8 +150,9 @@ export function findAndPickUpNearParcels(me, parcels, config) {
         let best_option_id = best_option[3];
         let best_option_x = best_option[1];
         let best_option_y = best_option[2];
-        
-        let parcelExpirationDuration, notInfinite = 1;
+
+        let parcelExpirationDuration,
+            notInfinite = 1;
         if (config.PARCEL_DECADING_INTERVAL == "infinite") {
             parcelExpirationDuration = 1;
             notInfinite = 0;
@@ -155,12 +161,14 @@ export function findAndPickUpNearParcels(me, parcels, config) {
         }
 
         let best_option_p = parcels.get(best_option_id);
-        if(!best_option_p && DEBUG) console.log("parcel not found!!!");
+        if (!best_option_p && DEBUG) console.log("parcel not found!!!");
         // console.log("parcels:", parcels);
         // console.log("dist:", distance({ x:best_option_x, y:best_option_y }, me));
         // console.log("expiration:", parcelExpirationDuration);
-        best_option_p.reward = best_option_p.reward * parcelExpirationDuration - distance({ x:best_option_x, y:best_option_y }, me) * 2 * config.MOVEMENT_DURATION * notInfinite;
-        best_option_p.reward = best_option_p.reward / 1000;
+        best_option_p.reward =
+            best_option_p.reward * parcelExpirationDuration -
+            distance({ x: best_option_x, y: best_option_y }, me) * 2 * config.MOVEMENT_DURATION * notInfinite;
+        if (notInfinite) best_option_p.reward = best_option_p.reward / 1000;
         let best_option_reward = best_option_p.reward;
 
         // set best option in new carrying
@@ -182,7 +190,7 @@ export function findAndPickUpNearParcels(me, parcels, config) {
                 // if the new carrying has a higher reward, deliver the old parcels and pick up the new one
                 // pick up new parcel
                 let new_intention = new Intention(this, ["go_pick_up", best_option_x, best_option_y, best_option_id]);
-                
+
                 if (DEBUG) console.log("A new package can be picked up. New intention:", new_intention);
                 return new_intention;
             } else {
