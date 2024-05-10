@@ -19,6 +19,9 @@ export const parcels = new Map();
 // store perceived agents
 const agents = new Map();
 
+// save seen parcels but not taken
+// const notCarried = [];
+
 function updateParcels(perceived_parcels) {
     //TODO don't remove not expired parcels
     for (const [id, parcel] of parcels.entries()) {
@@ -42,6 +45,20 @@ function updateParcels(perceived_parcels) {
             // if (DEBUG) console.log("me.carrying", me.carrying);
             // if (DEBUG) console.log("parcels", parcels);
         }
+
+        // Iterate over the keys of the parcels map
+        // for (const [key, value] of parcels) {
+        //     // Check if the key is not present in the carrying map
+        //     if (!me.carrying.has(key) && value.carriedBy === null) {
+        //         // If the key is not present, add it to the notCarried array
+        //         notCarried.push(value);
+        //     }
+        // }
+        // notCarried.sort((a, b) => {
+        //     const distanceA = distance({ x: me.x, y: me.y }, { x: a.x, y: a.y });
+        //     const distanceB = distance({ x: me.x, y: me.y }, { x: b.x, y: b.y });
+        //     return distanceA - distanceB;
+        // });
     }
 }
 
@@ -113,8 +130,11 @@ client.onMap((width, height, tiles) => {
     map.height = height;
     for (const t of tiles) {
         map.add(t);
-        if (t.delivery) map.deliveryTiles.set(t.x + 1000 * t.y, t);
+        if (t.delivery) map.addDelivery(t);
+        if (t.parcelSpawner) map.addSpawner(t);
     }
+
+    if (map.tiles.size - map.deliveryTiles.size > map.spawnerTiles.size) map.moreNormalTilesThanSpawners = true;
 
     // create graph for A*
     matrix = Array(height)
@@ -244,7 +264,7 @@ class GoPickUp extends Plan {
             // const carriedArray = getCarriedRewardAndTreshold(me, config);
             // const carriedReward = carriedArray[0];
             // const TRESHOLD = carriedArray[1];
-        
+
             // // go deliver
             // if (carriedReward > TRESHOLD && TRESHOLD !== 0) {
             //     // if (DEBUG) console.log("go_deliver");
@@ -317,6 +337,62 @@ class GoTo extends Plan {
     }
 }
 
+function getRandomTile() {
+    let i = Math.round(Math.random() * map.tiles.size);
+    let tile = Array.from(map.tiles.values()).at(i);
+    return tile;
+}
+
+function calculateDirectionFromAgents(me, agents) {
+    let directionX = 0;
+    let directionY = 0;
+
+    for (const agent of agents.values()) {
+        const dx = me.x - agent.x;
+        const dy = me.y - agent.y;
+
+        // Calculate the inverse square distance to give more weight to distant agents
+        const inverseDistance = 1 / (dx ** 2 + dy ** 2);
+
+        // Add the weighted direction
+        directionX += dx * inverseDistance;
+        directionY += dy * inverseDistance;
+    }
+
+    // Normalize the direction vector
+    const magnitude = Math.sqrt(directionX ** 2 + directionY ** 2);
+    if (magnitude !== 0) {
+        directionX /= magnitude;
+        directionY /= magnitude;
+    }
+
+    return { x: directionX, y: directionY };
+}
+
+function makeLittleSteps(dir) {
+    //* make little random steps
+    const CONST = 3;
+    let randomTile;
+    for (let i = 0; i < 5; i++) {
+        const newX = me.x + Math.floor((Math.floor(Math.random() * CONST) + 1) * dir.x);
+        const newY = me.y + Math.floor((Math.floor(Math.random() * CONST) + 1) * dir.y);
+        const newKey = newX + 1000 * newY;
+
+        if (map.tiles.has(newKey)) {
+            randomTile = map.tiles.get(newKey);
+            break;
+        }
+    }
+
+    if (!randomTile) randomTile = getRandomTile();
+    return randomTile;
+}
+
+function moveAwayFromAgents(me, agents) {
+    const dir = calculateDirectionFromAgents(me, agents);
+    return makeLittleSteps(dir);
+}
+
 class Patrolling extends Plan {
     static isApplicableTo(patrolling) {
         return patrolling == "patrolling";
@@ -325,14 +401,63 @@ class Patrolling extends Plan {
     async execute(patrolling) {
         if (this.stopped) throw ["stopped"]; // if stopped then quit
 
-        let i = Math.round(Math.random() * map.tiles.size);
-        let tile = Array.from(map.tiles.values()).at(i);
-        if (tile) await this.subIntention(["go_to", tile.x, tile.y]);
+        // let i = Math.round(Math.random() * map.tiles.size);
+        // let tile = Array.from(map.tiles.values()).at(i);
+        // if (tile) await this.subIntention(["go_to", tile.x, tile.y]);
 
-        // TODO choose a tile near the chosen delivery tile
-        // const i = Math.round(Math.random() * map.deliveryTiles.size);
-        // const randomTile = Array.from(map.deliveryTiles.values()).at(i);
-        // if (randomTile) await this.subIntention(["go_to", randomTile.x, randomTile.y]);
+        if (me.x === undefined || me.y === undefined) return true;
+
+        let randomTile;
+
+        if (map.moreNormalTilesThanSpawners) {
+            //pick closest parcel spawner
+            if (DEBUG) console.log("moving to spawner");
+            let closestSpawner = null;
+            let closestDistance = Infinity;
+            for (const spawner of map.spawnerTiles.values()) {
+                // Calculate distance from the current position to the spawner
+                const dist = distance({ x: me.x, y: me.y }, { x: spawner.x, y: spawner.y });
+
+                // Update closest spawner if this spawner is closer
+                if (dist < closestDistance) {
+                    closestDistance = dist;
+                    closestSpawner = spawner;
+                }
+            }
+            randomTile = closestSpawner;
+        } else {
+            if (DEBUG) console.log("Moving randonmly with little steps");
+            const dir = {
+                x: Math.random() < 0.5 ? -1 : 1,
+                y: Math.random() < 0.5 ? -1 : 1,
+            };
+            randomTile = makeLittleSteps(dir);
+        }
+
+        // //  move to saved parcels
+        // if (notCarried.length > 0) {
+        //     console.log("Moving to saved parcel");
+        //     randomTile = parcels.get(notCarried[0].id);
+        //     notCarried.shift();
+        // // move away from agents
+        // } else if (agents.size > 0) {
+        //     console.log("Moving away from agents");
+        //     randomTile = moveAwayFromAgents(me, agents);
+        // // move randomly
+        // } else {
+        //     if (DEBUG) console.log("Moving randonmly with little steps");
+        //     const dir = {
+        //         x: Math.random() < 0.5 ? -1 : 1,
+        //         y: Math.random() < 0.5 ? -1 : 1,
+        //     };
+        //     randomTile = makeLittleSteps(dir);
+        // }
+
+        if (!randomTile) randomTile = getRandomTile();
+        await this.subIntention(["go_to", randomTile.x, randomTile.y]);
+
+        // parcels.delete(notCarried[0].id);
+        // notCarried.shift();
 
         if (this.stopped) throw ["stopped"]; // if stopped then quit
         return true;
