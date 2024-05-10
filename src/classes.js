@@ -1,12 +1,7 @@
-import {
-    canDeliverContentInTime,
-    findBestParcel,
-    getCarriedRewardAndTreshold,
-    distance,
-    findAndPickUpNearParcels,
-} from "../utils/functions.js";
 import { planLibrary } from "./intention_revision.js";
 import { DEBUG, config, me, PARCEL_REWARD_AVG, parcels } from "./shared.js";
+
+import { canDeliverContentInTime, findAndPickUpNearParcels } from "../utils/functions/parcelManagement.js";
 
 /**
  * Intention revision loop
