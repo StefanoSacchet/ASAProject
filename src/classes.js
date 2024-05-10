@@ -44,9 +44,77 @@ export class IntentionRevision {
                     console.log("=========================================================");
                 }
 
+                switch (intention.predicate[0]) {
+                    case "go_pick_up": {
+                        let id = intention.predicate[3];
+                        let p = parcels.get(id);
+                        if (p && p.carriedBy) {
+                            if (DEBUG)
+                                console.log("Pick up intention isn't valid anymore. Predicate:", intention.predicate);
+                            this.intention_queue.shift();
+                            continue;
+                        }
+                        break;
+                    }
+                    case "patrolling": {
+                        if (!config) break;
+                        // check if new parcels have spawned near the agent
+                        let new_intention = findAndPickUpNearParcels(me, parcels, config);
+                        if (new_intention) {
+                            this.intention_queue.push(new_intention);
+                            this.intention_queue.shift();
+                            continue;
+                        }
+                        // control if the agent is carrying parcels and if the reward can be delivered in time
+                        if (me.carrying.size > 0 && canDeliverContentInTime(me, config)) {
+                            if (DEBUG)
+                                console.log(
+                                    "Patrolling state entered while packages can be delivered, delivering them."
+                                );
+                            // go deliver
+                            let new_intention = new Intention(this, ["go_deliver"]);
+                            this.intention_queue.push(new_intention);
+                            this.intention_queue.shift();
+                            continue;
+                        } else {
+                            if (DEBUG)
+                                console.log("Patrolling state entered while packages carried but cannot be delivered");
+                            // drop parcels and keep patrolling
+                            // await client.putdown();
+                            // empty carrying
+                            // me.carrying.clear();
+                            // this.intention_queue.shift();
+                            // continue;
+                        }
+                        break;
+                    }
+                    case "go_deliver": {
+                        if (!config) break;
+                        // control if the agent is carrying parcels and if the reward can be delivered in time
+                        // if (!canDeliverContentInTime(me, config) && me.carrying.size > 0) {
+                        //     if (DEBUG) console.log("Cannot deliver carried packages anymore, dropping them.");
+                        //     // drop parcels and keep patrolling
+                        //     await client.putdown();
+                        //     // empty carrying
+                        //     me.carrying.clear();
+                        //     this.intention_queue.shift();
+                        //     continue;
+                        // }
+                        let new_intention = findAndPickUpNearParcels(me, parcels, config);
+                        if (new_intention) {
+                            this.intention_queue.push(new_intention);
+                            this.intention_queue.shift();
+                            continue;
+                        }
+                        break;
+                    }
+                    default:
+                        break;
+                }
+
                 // TODO maybe use a switch statement or a class-based approach
                 // TODO this hard-coded implementation is an example
-                if (intention.predicate[0] == "go_pick_up") {
+                /*if (intention.predicate[0] == "go_pick_up") {
                     let id = intention.predicate[3];
                     let p = parcels.get(id);
                     if (p && p.carriedBy) {
@@ -102,7 +170,7 @@ export class IntentionRevision {
                         this.intention_queue.shift();
                         continue;
                     }
-                }
+                }*/
 
                 // Start achieving intention
                 await intention
