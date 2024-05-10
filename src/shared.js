@@ -1,6 +1,6 @@
 import { client } from "../deliverooApi/connection.js";
 
-export const DEBUG = true;
+export const DEBUG = false;
 
 // store agent state
 export const me = { carrying: new Map() };
@@ -15,9 +15,19 @@ export const map = {
     height: undefined,
     tiles: new Map(),
     deliveryTiles: new Map(),
+    spawnerTiles: new Map(),
+    moreNormalTilesThanSpawners: false,
     add: function (tile) {
         const { x, y } = tile;
         return this.tiles.set(x + 1000 * y, tile);
+    },
+    addDelivery: function (tile) {
+        const { x, y } = tile;
+        return this.deliveryTiles.set(x + 1000 * y, tile);
+    },
+    addSpawner: function (tile) {
+        const { x, y } = tile;
+        return this.spawnerTiles.set(x + 1000 * y, tile);
     },
     xy: function (x, y) {
         return this.tiles.get(x + 1000 * y);
