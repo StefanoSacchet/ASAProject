@@ -3,25 +3,38 @@ import { distance } from "./distance.js";
 
 //* PATROLLING
 
-export function moveToSpawner() {
-    if (DEBUG) console.log("moving to spawner");
-    let closestSpawner = null;
-    let closestDistance = Infinity;
-    for (const spawner of map.spawnerTiles.values()) {
-        // Calculate distance from the current position to the spawner
-        const dist = distance({ x: me.x, y: me.y }, { x: spawner.x, y: spawner.y });
+// export function moveToSpawner() {
+//     let closestSpawner = null;
+//     let closestDistance = Infinity;
+//     for (const spawner of map.spawnerTiles.values()) {
+//         // Calculate distance from the current position to the spawner
+//         const dist = distance({ x: me.x, y: me.y }, { x: spawner.x, y: spawner.y });
 
-        // Update closest spawner if this spawner is closer
-        if (dist < closestDistance) {
-            closestDistance = dist;
-            closestSpawner = spawner;
-        }
-    }
-    return closestSpawner;
+//         // Update closest spawner if this spawner is closer
+//         if (dist < closestDistance) {
+//             closestDistance = dist;
+//             closestSpawner = spawner;
+//         }
+//     }
+//     return closestSpawner;
+// }
+
+export function moveToSpawner() {
+    // Create an array of spawner tiles with their distances from the current position
+    const spawnersWithDistances = Array.from(map.spawnerTiles.values()).map(spawner => {
+        const dist = distance({ x: me.x, y: me.y }, { x: spawner.x, y: spawner.y });
+        return { spawner, dist };
+    });
+
+    // Sort the array by distance
+    spawnersWithDistances.sort((a, b) => a.dist - b.dist);
+
+    // Return an array of spawner tiles sorted by distance
+    return spawnersWithDistances.map(item => item.spawner);
 }
 
 export function makeLittleSteps(dir) {
-    //* make little random steps
+    // make little random steps
     const CONST = 3;
     let randomTile;
     for (let i = 0; i < 5; i++) {

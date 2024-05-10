@@ -196,6 +196,9 @@ class GoTo extends Plan {
     }
 }
 
+// Initialize last selected spawner index
+let lastSpawnerIndex = -1;
+
 class Patrolling extends Plan {
     static isApplicableTo(patrolling) {
         return patrolling == "patrolling";
@@ -210,7 +213,10 @@ class Patrolling extends Plan {
 
         // move to spawner tile if there are more normal tiles than spawners
         if (map.moreNormalTilesThanSpawners) {
-            randomTile = moveToSpawner();
+            if (DEBUG) console.log("Moving to spawner");
+            const spawners = moveToSpawner();
+            lastSpawnerIndex = (lastSpawnerIndex + 1) % spawners.length; // Move to the next spawner in the list
+            randomTile = spawners[lastSpawnerIndex];
         } else {
             if (DEBUG) console.log("Moving randomly with little steps");
             const dir = {
