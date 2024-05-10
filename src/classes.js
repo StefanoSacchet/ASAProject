@@ -1,7 +1,12 @@
-import { canDeliverContentInTime, findBestParcel, getCarriedRewardAndTreshold, distance, findAndPickUpNearParcels } from "../utils/functions.js";
-import { parcels, planLibrary } from "./intention_revision.js";
-import { me, PARCEL_REWARD_AVG, config, DEBUG } from "./shared.js";
-import { client } from "../deliverooApi/connection.js";
+import {
+    canDeliverContentInTime,
+    findBestParcel,
+    getCarriedRewardAndTreshold,
+    distance,
+    findAndPickUpNearParcels,
+} from "../utils/functions.js";
+import { planLibrary } from "./intention_revision.js";
+import { DEBUG, config, me, PARCEL_REWARD_AVG, parcels } from "./shared.js";
 
 /**
  * Intention revision loop
@@ -19,7 +24,7 @@ export class IntentionRevision {
             // Consumes intention_queue if not empty
             if (this.intention_queue.length > 0) {
                 this.isIdle = false;
-                
+
                 if (DEBUG)
                     console.log(
                         "intentionRevision.loop",
@@ -45,7 +50,8 @@ export class IntentionRevision {
                     let id = intention.predicate[3];
                     let p = parcels.get(id);
                     if (p && p.carriedBy) {
-                        if (DEBUG) console.log("Pick up intention isn't valid anymore. Predicate:", intention.predicate);
+                        if (DEBUG)
+                            console.log("Pick up intention isn't valid anymore. Predicate:", intention.predicate);
                         this.intention_queue.shift();
                         continue;
                     }
@@ -60,7 +66,8 @@ export class IntentionRevision {
                     }
                     // control if the agent is carrying parcels and if the reward can be delivered in time
                     if (me.carrying.size > 0 && canDeliverContentInTime(me, config)) {
-                        if (DEBUG) console.log("Patrolling state entered while packages can be delivered, delivering them.");
+                        if (DEBUG)
+                            console.log("Patrolling state entered while packages can be delivered, delivering them.");
                         // go deliver
                         let new_intention = new Intention(this, ["go_deliver"]);
                         this.intention_queue.push(new_intention);
@@ -88,14 +95,13 @@ export class IntentionRevision {
                     //     this.intention_queue.shift();
                     //     continue;
                     // }
-                    
+
                     let new_intention = findAndPickUpNearParcels(me, parcels, config);
                     if (new_intention) {
                         this.intention_queue.push(new_intention);
                         this.intention_queue.shift();
                         continue;
                     }
-                    
                 }
 
                 // Start achieving intention
@@ -154,7 +160,7 @@ export class IntentionRevisionReplace extends IntentionRevision {
                 // go deliver
                 const new_intention = new Intention(this, ["go_deliver"]);
                 this.intention_queue.push(new_intention);
-            } 
+            }
         }
         // Force current intention stop
         if (last) {

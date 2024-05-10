@@ -7,7 +7,15 @@ export const me = { carrying: new Map() };
 
 // used to compute threshold
 export var PARCEL_REWARD_AVG;
+
+// store config
 export var config;
+
+// store perceived parcels
+export const parcels = new Map();
+
+// store perceived agents
+export const agents = new Map();
 
 // store map
 export const map = {
