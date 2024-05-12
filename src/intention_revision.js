@@ -77,7 +77,12 @@ client.onAgentsSensing((percieved_agents) => {
  */
 client.onParcelsSensing((perceived_parcels) => {
     // remove expired parcels and update carriedBy
-    updateParcels(perceived_parcels);
+    const isCarryingEmpty = updateParcels(perceived_parcels);
+    
+    if (isCarryingEmpty) {
+        myAgent.clear();
+        myAgent.isIdle = true;
+    }
 
     // revisit beliefset revision so to trigger option generation only in the case a new parcel is observed
     let new_parcel_sensed = false;

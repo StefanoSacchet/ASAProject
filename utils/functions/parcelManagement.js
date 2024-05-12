@@ -7,11 +7,13 @@ import { Intention } from "../../src/classes.js";
 //* PARCEL MANAGEMENT
 
 export function updateParcels(perceived_parcels) {
-    //TODO don't remove not expired parcels
     for (const [id, parcel] of parcels.entries()) {
         if (!perceived_parcels.find((p) => p.id === id)) {
             parcels.delete(id);
-            me.carrying.delete(id);
+            if (me.carrying.has(id)) {
+                me.carrying.delete(id);
+                if (me.carrying.size === 0) return true;
+            }
         } else {
             // update carriedBy
             if (parcel.carriedBy && parcel.carriedBy === me.id) {
@@ -28,6 +30,7 @@ export function updateParcels(perceived_parcels) {
             }
         }
     }
+    return false;
 }
 
 export function getCarriedRewardAndTreshold(me, config) {

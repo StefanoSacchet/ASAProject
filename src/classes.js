@@ -11,6 +11,9 @@ export class IntentionRevision {
     get intention_queue() {
         return this.#intention_queue;
     }
+    set intention_queue(value) {
+        this.#intention_queue = value;
+    }
 
     idle = ["patrolling"];
 
