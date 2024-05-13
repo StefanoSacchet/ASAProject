@@ -1,12 +1,12 @@
 import { astar, Graph } from "../utils/astar.js";
 import { Plan, IntentionRevisionReplace } from "./classes.js";
-import { DEBUG, config, me, map, parcels } from "./shared.js";
+import { DEBUG, config, me, map, parcels, agents } from "./shared.js";
 import { client } from "../deliverooApi/connection.js";
 
 import { nearestDelivery } from "../utils/functions/distance.js";
 import { chooseBestOptionV2 } from "../utils/functions/intentions.js";
 import { getCarriedRewardAndTreshold, updateParcels } from "../utils/functions/parcelManagement.js";
-import { moveToSpawner, makeLittleSteps, getRandomTile } from "../utils/functions/patrolling.js";
+import { moveToSpawner, makeLittleSteps, getRandomTile, moveAwayFromAgents } from "../utils/functions/patrolling.js";
 import { updateAgents } from "../utils/functions/agents.js";
 import { isAboveDelivery, isAbovePickup } from "../utils/functions/movement.js";
 
@@ -78,7 +78,7 @@ client.onAgentsSensing((percieved_agents) => {
 client.onParcelsSensing((perceived_parcels) => {
     // remove expired parcels and update carriedBy
     const isCarryingEmpty = updateParcels(perceived_parcels);
-    
+
     if (isCarryingEmpty) {
         myAgent.clear();
         myAgent.isIdle = true;
@@ -222,28 +222,19 @@ class Patrolling extends Plan {
             const spawners = moveToSpawner();
             lastSpawnerIndex = (lastSpawnerIndex + 1) % spawners.length; // Move to the next spawner in the list
             randomTile = spawners[lastSpawnerIndex];
+        } else if (agents.size > 0) {
+            // move away from agents
+            console.log("Moving away from agents");
+            randomTile = moveAwayFromAgents(agents);
         } else {
-            if (DEBUG) console.log("Moving randomly with little steps");
+            // move randomly
+            console.log("Moving randonmly");
             const dir = {
                 x: Math.random() < 0.5 ? -1 : 1,
                 y: Math.random() < 0.5 ? -1 : 1,
             };
             randomTile = makeLittleSteps(dir);
         }
-
-        // // move away from agents
-        // if (agents.size > 0) {
-        //     console.log("Moving away from agents");
-        //     randomTile = moveAwayFromAgents(agents);
-        // // move randomly
-        // } else {
-        //     if (DEBUG) console.log("Moving randonmly with little steps");
-        //     const dir = {
-        //         x: Math.random() < 0.5 ? -1 : 1,
-        //         y: Math.random() < 0.5 ? -1 : 1,
-        //     };
-        //     randomTile = makeLittleSteps(dir);
-        // }
 
         if (!randomTile) randomTile = getRandomTile();
         await this.subIntention(["go_to", randomTile.x, randomTile.y]);

@@ -52,7 +52,7 @@ export function makeLittleSteps(dir) {
     return randomTile;
 }
 
-function calculateDirectionFromAgents(agents) {
+function calculateDirectionFromAgents(me, agents) {
     let directionX = 0;
     let directionY = 0;
 

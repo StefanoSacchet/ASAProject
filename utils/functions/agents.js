@@ -8,7 +8,7 @@ export function updateAgents(percieved_agents) {
         if (!percieved_agents.find((agent) => agent.id === id)) agents.delete(id);
     }
     // update agents
-    agents.forEach((agent) => {
+    percieved_agents.forEach((agent) => {
         if (!agents.has(agent.id)) agents.set(agent.id, agent);
         else agents.set(agent.id, agent);
     });
