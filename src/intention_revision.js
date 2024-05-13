@@ -132,11 +132,12 @@ class GoPickUp extends Plan {
 
     async execute(go_pick_up, x, y, id) {
         if (this.stopped) throw ["stopped"]; // if stopped then quit
-        await this.subIntention(["go_to", x, y]);
+        let go_to = await this.subIntention(["go_to", x, y]);
         if (this.stopped) throw ["stopped"];
-        await client.pickup();
+        let pickup = await client.pickup();
         if (this.stopped) throw ["stopped"];
-        else {
+        if (go_to && !(pickup == []) && pickup.length > 0) {
+            console.log("Gopickup", go_to, pickup);
             // if (DEBUG) console.log("picked up", id);
             me.carrying.set(id, parcels.get(id));
             parcels.get(id).carriedBy = me.id;
@@ -151,6 +152,9 @@ class GoPickUp extends Plan {
             //     return;
             // }
             return true;
+        }
+        else if (DEBUG) {
+            console.log("pickup failed")
         }
     }
 }
