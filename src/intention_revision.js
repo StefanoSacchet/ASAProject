@@ -224,11 +224,11 @@ class Patrolling extends Plan {
             randomTile = spawners[lastSpawnerIndex];
         } else if (agents.size > 0) {
             // move away from agents
-            console.log("Moving away from agents");
+            if (DEBUG) console.log("Moving away from agents");
             randomTile = moveAwayFromAgents(agents);
         } else {
             // move randomly
-            console.log("Moving randonmly");
+            if (DEBUG) console.log("Moving randonmly");
             const dir = {
                 x: Math.random() < 0.5 ? -1 : 1,
                 y: Math.random() < 0.5 ? -1 : 1,
