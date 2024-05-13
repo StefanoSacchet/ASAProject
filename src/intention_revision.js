@@ -137,7 +137,7 @@ class GoPickUp extends Plan {
         let pickup = await client.pickup();
         if (this.stopped) throw ["stopped"];
         if (go_to && !(pickup == []) && pickup.length > 0) {
-            console.log("Gopickup", go_to, pickup);
+            if (DEBUG) console.log("Gopickup", go_to, pickup);
             // if (DEBUG) console.log("picked up", id);
             me.carrying.set(id, parcels.get(id));
             parcels.get(id).carriedBy = me.id;
