@@ -233,11 +233,12 @@ class Patrolling extends Plan {
         } else {
             // move randomly
             if (DEBUG) console.log("Moving randonmly");
-            const dir = {
-                x: Math.random() < 0.5 ? -1 : 1,
-                y: Math.random() < 0.5 ? -1 : 1,
-            };
-            randomTile = makeLittleSteps(dir);
+            // const dir = {
+            //     x: Math.random() < 0.5 ? -1 : 1,
+            //     y: Math.random() < 0.5 ? -1 : 1,
+            // };
+            // randomTile = makeLittleSteps(dir);
+            randomTile = getRandomTile();
         }
 
         if (!randomTile) randomTile = getRandomTile();
