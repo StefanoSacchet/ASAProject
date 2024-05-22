@@ -193,10 +193,10 @@ class GoTo extends Plan {
     }
 }
 
-// Initialize last selected spawner index
-let lastSpawnerIndex = -1;
-
 class Patrolling extends Plan {
+    // Initialize last selected spawner index
+    static #lastSpawnerIndex = -1;
+
     static isApplicableTo(patrolling) {
         return patrolling == "patrolling";
     }
@@ -204,16 +204,14 @@ class Patrolling extends Plan {
     async execute(patrolling) {
         if (this.stopped) throw ["stopped"]; // if stopped then quit
 
-        if (me.x === undefined || me.y === undefined) return true;
-
         let randomTile;
 
         // move to spawner tile if there are more normal tiles than spawners
         if (map.moreNormalTilesThanSpawners) {
             if (DEBUG) console.log("Moving to spawner");
             const spawners = moveToSpawner();
-            lastSpawnerIndex = (lastSpawnerIndex + 1) % spawners.length; // Move to the next spawner in the list
-            randomTile = spawners[lastSpawnerIndex];
+            Patrolling.#lastSpawnerIndex = (Patrolling.#lastSpawnerIndex + 1) % spawners.length; // Move to the next spawner in the list
+            randomTile = spawners[Patrolling.#lastSpawnerIndex];
         } else if (agents.size > 0) {
             // move away from agents
             if (DEBUG) console.log("Moving away from agents");
@@ -221,11 +219,6 @@ class Patrolling extends Plan {
         } else {
             // move randomly
             if (DEBUG) console.log("Moving randonmly");
-            // const dir = {
-            //     x: Math.random() < 0.5 ? -1 : 1,
-            //     y: Math.random() < 0.5 ? -1 : 1,
-            // };
-            // randomTile = makeLittleSteps(dir);
             randomTile = getRandomTile();
         }
 
