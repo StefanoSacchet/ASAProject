@@ -1,5 +1,5 @@
 import { planLibrary } from "./intention_revision.js";
-import { DEBUG, config, me, PARCEL_REWARD_AVG, parcels } from "./shared.js";
+import { DEBUG, config, me, parcels } from "./shared.js";
 
 import { canDeliverContentInTime, findAndPickUpNearParcels } from "../utils/functions/parcelManagement.js";
 
@@ -180,7 +180,7 @@ export class IntentionRevision {
 
                 // Remove from the queue
                 this.intention_queue.shift();
-            } else {
+            } else if (config.AGENTS_OBSERVATION_DISTANCE) {
                 this.push(this.idle);
                 this.isIdle = true;
             }

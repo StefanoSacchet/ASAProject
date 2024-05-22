@@ -2,7 +2,6 @@ import { astar, Graph } from "../utils/astar.js";
 import { Plan, IntentionRevisionReplace } from "./classes.js";
 import { DEBUG, config, me, map, parcels, agents } from "./shared.js";
 import { client } from "../deliverooApi/connection.js";
-
 import { nearestDelivery } from "../utils/functions/distance.js";
 import { chooseBestOptionV2 } from "../utils/functions/intentions.js";
 import { getCarriedRewardAndTreshold, updateParcels } from "../utils/functions/parcelManagement.js";
@@ -19,8 +18,12 @@ export var matrix;
 // store plan classes
 export const planLibrary = [];
 
+client.onConfig((param) => {
+    config.setConfig(param);
+});
+
 client.onMap((width, height, tiles) => {
-    // store map
+    // update map
     map.width = width;
     map.height = height;
     for (const t of tiles) {
@@ -28,7 +31,6 @@ client.onMap((width, height, tiles) => {
         if (t.delivery) map.addDelivery(t);
         if (t.parcelSpawner) map.addSpawner(t);
     }
-
     if (map.tiles.size - map.deliveryTiles.size > map.spawnerTiles.size) map.moreNormalTilesThanSpawners = true;
 
     // create graph for A*
