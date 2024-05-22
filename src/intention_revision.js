@@ -6,7 +6,7 @@ import { nearestDelivery } from "../utils/functions/distance.js";
 import { chooseBestOptionV2 } from "../utils/functions/intentions.js";
 import { getCarriedRewardAndTreshold, updateParcels } from "../utils/functions/parcelManagement.js";
 import { moveToSpawner, makeLittleSteps, getRandomTile, moveAwayFromAgents } from "../utils/functions/patrolling.js";
-import { updateAgents } from "../utils/functions/agents.js";
+import { updateAgents, updateGraph } from "../utils/functions/agents.js";
 import { isAboveDelivery, isAbovePickup } from "../utils/functions/movement.js";
 
 // A* graph
@@ -58,20 +58,6 @@ if agent.x = 2.4 --> he's moving from 3 to 2
 */
 client.onAgentsSensing((percieved_agents) => {
     updateAgents(percieved_agents);
-
-    if (!graph) return;
-
-    // change back to 1 where there is a tile
-    map.tiles.forEach((tile) => {
-        graph.grid[tile.x][tile.y].weight = 1;
-    });
-    // remove tiles where there is an agent
-    percieved_agents.forEach((agent) => {
-        // check if value is .6 or .4
-        const x = Math.round(agent.x);
-        const y = Math.round(agent.y);
-        graph.grid[x][y].weight = 0;
-    });
 });
 
 /**
@@ -154,9 +140,8 @@ class GoPickUp extends Plan {
             //     return;
             // }
             return true;
-        }
-        else if (DEBUG) {
-            console.log("pickup failed")
+        } else if (DEBUG) {
+            console.log("pickup failed");
         }
     }
 }
@@ -167,43 +152,44 @@ class GoTo extends Plan {
     }
 
     async execute(go_to, x, y) {
-        while (me.x != x || me.y != y) {
-            if (this.stopped) throw ["stopped"]; // if stopped then quit
+        if (this.stopped) throw ["stopped"]; // if stopped then quit
 
-            const start = graph.grid[me.x][me.y];
-            const end = graph.grid[x][y];
-            const res = astar.search(graph, start, end); // A* search
+        updateGraph();
 
-            if (res.length == 0) throw ["no path found"]; // if no path found then quit
+        const start = graph.grid[me.x][me.y];
+        const end = graph.grid[x][y];
+        const res = astar.search(graph, start, end); // A* search
 
-            let status_x = false;
-            let status_y = false;
+        if (res.length == 0) throw ["no path found"]; // if no path found then quit
 
-            // move to each node in the path
-            for (let i = 0; i < res.length; i++) {
-                if (isAboveDelivery()) {
-                    client.putdown();
-                    me.carrying.clear();
-                }
-                const parcel = isAbovePickup();
-                if (parcel) {
-                    client.pickup();
-                    me.carrying.set(parcel.id, parcel);
-                }
+        let status_x = false;
+        let status_y = false;
 
-                if (this.stopped) throw ["stopped"]; // if stopped then quit
-                let next = res[i];
-                if (next.x > me.x) status_x = await client.move("right");
-                else if (next.x < me.x) status_x = await client.move("left");
-                if (next.y > me.y) status_y = await client.move("up");
-                else if (next.y < me.y) status_y = await client.move("down");
-
-                if (status_x) me.x = next.x;
-                if (status_y) me.y = next.y;
+        // move to each node in the path
+        for (let i = 0; i < res.length; i++) {
+            if (isAboveDelivery()) {
+                client.putdown();
+                me.carrying.clear();
             }
+            const parcel = isAbovePickup();
+            if (parcel) {
+                client.pickup();
+                me.carrying.set(parcel.id, parcel);
+            }
+
+            if (this.stopped) throw ["stopped"]; // if stopped then quit
+            let next = res[i];
+            if (next.x > me.x) status_x = await client.move("right");
+            else if (next.x < me.x) status_x = await client.move("left");
+            if (next.y > me.y) status_y = await client.move("up");
+            else if (next.y < me.y) status_y = await client.move("down");
+
+            if (status_x) me.x = next.x;
+            if (status_y) me.y = next.y;
         }
 
-        return true;
+        if (me.x == x && me.y == y) return true;
+        else throw ["no path found"];
     }
 }
 
