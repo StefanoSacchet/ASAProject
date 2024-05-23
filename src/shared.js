@@ -1,5 +1,5 @@
 import { GameMap } from "../types/map.js";
-import { Agent } from "../types/Agent.js";
+import { AgentModel } from "../types/AgentModel.js";
 import { Parcel } from "../types/Parcel.js";
 import { Config } from "../types/Config.js";
 import { Me } from "../types/Me.js";
@@ -23,6 +23,6 @@ export const parcels = new Map();
 
 /**
  * store perceived agents
- * @type {Map<string, Agent>}
+ * @type {Map<string, AgentModel>}
  */
 export const agents = new Map();

@@ -6,7 +6,8 @@
   "main": "index.js",
   "module": "index.js",
   "scripts": {
-    "start": "node src/intention_revision.js",
+    "start": "node src/agentSolo/intention_revision.js A",
+    "startAgents": "node start.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {

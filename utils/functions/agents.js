@@ -1,6 +1,6 @@
 import { agents } from "../../src/shared.js";
 import { map } from "../../src/shared.js";
-import { graph } from "../../src/intention_revision.js";
+import { graph } from "../../src/agentSolo/intention_revision.js";
 
 //* AGENTS
 

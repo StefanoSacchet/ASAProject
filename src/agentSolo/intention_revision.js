@@ -1,13 +1,13 @@
-import { astar, Graph } from "../utils/astar.js";
-import { Plan, IntentionRevisionReplace } from "./classes.js";
-import { DEBUG, config, me, map, parcels, agents } from "./shared.js";
-import { client } from "../deliverooApi/connection.js";
-import { nearestDelivery } from "../utils/functions/distance.js";
-import { chooseBestOptionV2 } from "../utils/functions/intentions.js";
-import { getCarriedRewardAndTreshold, updateParcels } from "../utils/functions/parcelManagement.js";
-import { moveToSpawner, makeLittleSteps, getRandomTile, moveAwayFromAgents } from "../utils/functions/patrolling.js";
-import { updateAgents, updateGraph } from "../utils/functions/agents.js";
-import { isAboveDelivery, isAbovePickup } from "../utils/functions/movement.js";
+import { astar, Graph } from "../../utils/astar.js";
+import { Plan, IntentionRevisionReplace } from "../classes.js";
+import { DEBUG, config, me, map, parcels, agents } from "../shared.js";
+import { client } from "../../deliverooApi/connection.js";
+import { nearestDelivery } from "../../utils/functions/distance.js";
+import { chooseBestOptionV2 } from "../../utils/functions/intentions.js";
+import { getCarriedRewardAndTreshold, updateParcels } from "../../utils/functions/parcelManagement.js";
+import { moveToSpawner, makeLittleSteps, getRandomTile, moveAwayFromAgents } from "../../utils/functions/patrolling.js";
+import { updateAgents, updateGraph } from "../../utils/functions/agents.js";
+import { isAboveDelivery, isAbovePickup } from "../../utils/functions/movement.js";
 
 // A* graph
 export var graph;

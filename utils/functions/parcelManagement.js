@@ -1,6 +1,6 @@
 import { DEBUG, parcels, me, map } from "../../src/shared.js";
 import { distance, nearestDelivery } from "./distance.js";
-import { graph } from "../../src/intention_revision.js";
+import { graph } from "../../src/agentSolo/intention_revision.js";
 import { astar } from "../astar.js";
 import { Intention } from "../../src/classes.js";
 
