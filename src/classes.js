@@ -6,7 +6,12 @@ import { canDeliverContentInTime, findAndPickUpNearParcels } from "../utils/func
  * Intention revision loop
  */
 export class IntentionRevision {
+    /**
+     * #intention_queue is an array of intentions to be achieved
+     * @type {Array<Intention>}
+     */
     #intention_queue = new Array();
+
     get intention_queue() {
         return this.#intention_queue;
     }
@@ -20,7 +25,6 @@ export class IntentionRevision {
         while (true) {
             // Consumes intention_queue if not empty
             if (this.intention_queue.length > 0) {
-                this.isIdle = false;
 
                 if (DEBUG)
                     console.log(
@@ -120,7 +124,6 @@ export class IntentionRevision {
                 this.intention_queue.shift();
             } else if (me.id) {
                 this.push(this.idle);
-                this.isIdle = true;
             }
             // Postpone next iteration at setImmediate
             await new Promise((res) => setImmediate(res));
@@ -173,6 +176,7 @@ export class IntentionRevisionReplace extends IntentionRevision {
     }
 
     async clear() {
+        this.intention_queue.forEach((i) => i.stop());
         this.intention_queue = [];
     }
 }

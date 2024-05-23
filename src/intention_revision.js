@@ -66,11 +66,8 @@ client.onAgentsSensing((percieved_agents) => {
 client.onParcelsSensing((perceived_parcels) => {
     // remove expired parcels and update carriedBy
     const isCarryingEmpty = updateParcels(perceived_parcels);
-
-    if (isCarryingEmpty) {
-        myAgent.clear();
-        myAgent.isIdle = true;
-    }
+    // clear intention if carrying is empty
+    if (isCarryingEmpty) myAgent.clear();
 
     // revisit beliefset revision so to trigger option generation only in the case a new parcel is observed
     let new_parcel_sensed = false;
@@ -79,6 +76,9 @@ client.onParcelsSensing((perceived_parcels) => {
         parcels.set(p.id, p); // update perceived parcels
     }
     if (!new_parcel_sensed) return;
+
+    // if patrolling and new parcels are observed, clear intention
+    if (myAgent.intention_queue[0]?.predicate === "patrolling") myAgent.clear();
 
     const carriedArray = getCarriedRewardAndTreshold(me, config);
     const carriedReward = carriedArray[0];
