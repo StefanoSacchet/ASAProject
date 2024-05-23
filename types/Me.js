@@ -18,7 +18,7 @@ export class Me {
         
         /**
          * The x-coordinate of the Me instance.
-         * @type {numebr | undefined}
+         * @type {number | undefined}
          */
         this.x = undefined;
         

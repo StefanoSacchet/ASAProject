@@ -29,6 +29,11 @@ export function chooseBestOption(options) {
     return best_option;
 }
 
+/**
+ * Chooses the best option from a list of options based on reward and distance from the current position
+ * @param {Array<string|number>} options - The list of options to choose from
+ * @returns {string|number|undefined} The best option from the list
+ */
 export function chooseBestOptionV2(options) {
     // set a score for each option based on its reward and distance from me
     const PENALTY_DISTANCE = 2;

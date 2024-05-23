@@ -5,85 +5,85 @@ export class Config {
     constructor() {
         /**
          * The file path of the map.
-         * @type {string}
+         * @type {string | undefined}
          */
         this.MAP_FILE = undefined;
 
         /**
          * The interval at which parcels are generated.
-         * @type {number}
+         * @type {number | undefined}
          */
         this.PARCELS_GENERATION_INTERVAL = undefined;
 
         /**
          * The maximum number of parcels.
-         * @type {number}
+         * @type {number | undefined}
          */
         this.PARCELS_MAX = undefined;
 
         /**
          * The number of movement steps an agent can take.
-         * @type {number}
+         * @type {number | undefined}
          */
         this.MOVEMENT_STEPS = undefined;
 
         /**
          * The duration of each movement step.
-         * @type {number}
+         * @type {number | undefined}
          */
         this.MOVEMENT_DURATION = undefined;
 
         /**
          * The distance at which an agent can observe other agents.
-         * @type {number}
+         * @type {number | undefined}
          */
         this.AGENTS_OBSERVATION_DISTANCE = undefined;
 
         /**
          * The distance at which an agent can observe parcels.
-         * @type {number}
+         * @type {number | undefined}
          */
         this.PARCELS_OBSERVATION_DISTANCE = undefined;
 
         /**
          * The timeout duration for an agent.
-         * @type {number}
+         * @type {number | undefined}
          */
         this.AGENT_TIMEOUT = undefined;
 
         /**
          * The average reward value for a parcel.
-         * @type {number}
+         * @type {number | undefined}
          */
         this.PARCEL_REWARD_AVG = undefined;
 
         /**
          * The variance of reward values for parcels.
-         * @type {number}
+         * @type {number | undefined}
          */
         this.PARCEL_REWARD_VARIANCE = undefined;
 
         /**
          * The interval at which parcel rewards decay.
-         * @type {number}
+         * @type {number | undefined}
          */
         this.PARCEL_DECADING_INTERVAL = undefined;
 
         /**
          * Indicates whether agents move randomly.
-         * @type {boolean}
+         * @type {boolean | undefined}
          */
         this.RANDOMLY_MOVING_AGENTS = undefined;
 
         /**
          * The speed of randomly moving agents.
-         * @type {number}
+         * @type {number | undefined}
          */
         this.RANDOM_AGENT_SPEED = undefined;
 
         /**
          * The clock value for the simulation.
-         * @type {number}
+         * @type {number | undefined}
          */
         this.CLOCK = undefined;
     }

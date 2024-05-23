@@ -230,11 +230,13 @@ export class Intention {
 
     /**
      * predicate is in the form ['go_to', x, y]
+     * @param {Array<string|number>}
      */
+    #predicate;
+
     get predicate() {
         return this.#predicate;
     }
-    #predicate;
 
     constructor(parent, predicate) {
         this.#parent = parent;

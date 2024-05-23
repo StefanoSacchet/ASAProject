@@ -82,11 +82,10 @@ client.onParcelsSensing((perceived_parcels) => {
 
     const carriedArray = getCarriedRewardAndTreshold(me, config);
     const carriedReward = carriedArray[0];
-    const TRESHOLD = carriedArray[1];
+    const THRESHOLD = carriedArray[1];
 
     // go deliver
-    if (carriedReward > TRESHOLD && TRESHOLD !== 0) {
-        // if (DEBUG) console.log("go_deliver");
+    if (carriedReward > THRESHOLD && THRESHOLD !== 0) {
         myAgent.push(["go_deliver"]);
         return;
     }

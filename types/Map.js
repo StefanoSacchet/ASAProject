@@ -5,13 +5,13 @@ export class GameMap {
     constructor() {
         /**
          * The width of the game map.
-         * @type {number|undefined}
+         * @type {number | undefined}
          */
         this.width = undefined;
 
         /**
          * The height of the game map.
-         * @type {number|undefined}
+         * @type {number | undefined}
          */
         this.height = undefined;
 
@@ -74,7 +74,7 @@ export class GameMap {
      * Retrieves a tile from the game map based on its coordinates.
      * @param {number} x - The x-coordinate of the tile.
      * @param {number} y - The y-coordinate of the tile.
-     * @returns {Tile|undefined} - The tile at the specified coordinates, or undefined if not found.
+     * @returns {Tile | undefined} - The tile at the specified coordinates, or undefined if not found.
      */
     xy(x, y) {
         return this.tiles.get(x + 1000 * y);
