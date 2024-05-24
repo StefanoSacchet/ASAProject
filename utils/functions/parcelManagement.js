@@ -1,38 +1,53 @@
-import { DEBUG, parcels, me, map } from "../../src/shared.js";
-import { distance, nearestDelivery } from "./distance.js";
-import { graph } from "../../src/agentSolo/intention_revision.js";
+import { DEBUG } from "../../config.js";
+import Parcel from "../../types/Parcel.js";
 import { astar } from "../astar.js";
-import { Intention } from "../../src/classes.js";
+import Intention from "../../src/intentions/Intention.js";
+import BeliefSet from "../../types/BeliefSet.js";
+import { distance, nearestDelivery } from "./distance.js";
+import Me from "../../types/Me.js";
+import Config from "../../types/Config.js";
+import GameMap from "../../types/Map.js";
 
 //* PARCEL MANAGEMENT
 
-export function updateParcels(perceived_parcels) {
-    for (const [id, parcel] of parcels.entries()) {
+/**
+ * Update parcels in beliefSet
+ * @param {Array<Parcel>} perceived_parcels
+ * @param {BeliefSet} beliefSet
+ * @returns {boolean}
+ */
+export function updateParcels(perceived_parcels, beliefSet) {
+    for (const [id, parcel] of beliefSet.parcels.entries()) {
         if (!perceived_parcels.find((p) => p.id === id)) {
-            parcels.delete(id);
-            if (me.carrying.has(id)) {
-                me.carrying.delete(id);
-                if (me.carrying.size === 0) return true;
+            beliefSet.parcels.delete(id);
+            if (beliefSet.me.carrying.has(id)) {
+                beliefSet.me.carrying.delete(id);
+                if (beliefSet.me.carrying.size === 0) return true;
             }
         } else {
             // update carriedBy
-            if (parcel.carriedBy && parcel.carriedBy === me.id) {
-                parcel.carriedBy = me.id;
+            if (parcel.carriedBy && parcel.carriedBy === beliefSet.me.id) {
+                parcel.carriedBy = beliefSet.me.id;
             }
             // update me.carrying
-            if (me.carrying.has(id)) {
-                me.carrying.set(id, parcel);
-                parcel.carriedBy = me.id;
+            if (beliefSet.me.carrying.has(id)) {
+                beliefSet.me.carrying.set(id, parcel);
+                parcel.carriedBy = beliefSet.me.id;
             }
             // update me.carrying if found in parcels but not in me.carrying
-            if (parcel.carriedBy && parcel.carriedBy === me.id) {
-                me.carrying.set(id, parcel);
+            if (parcel.carriedBy && parcel.carriedBy === beliefSet.me.id) {
+                beliefSet.me.carrying.set(id, parcel);
             }
         }
     }
     return false;
 }
 
+/**
+ * @param {Me} me
+ * @param {Config} config
+ * @returns {[number, number]}
+ */
 export function getCarriedRewardAndTreshold(me, config) {
     let carriedQty = me.carrying.size;
     // TODO revise TRESHOLD computation
@@ -48,11 +63,18 @@ export function getCarriedRewardAndTreshold(me, config) {
     return [carriedReward, TRESHOLD];
 }
 
-export function canDeliverContentInTime(me, config) {
-    if (!me || me.x == undefined || me.y == undefined || graph.grid === undefined || me.carrying.size == 0)
-        return false;
+/**
+ * @param {Me} me
+ * @param {GameMap} map
+ * @param {Graph} graph
+ * @param {Config} config
+ * @returns {boolean}
+ */
+export function canDeliverContentInTime(me, map, graph, config) {
+    // if (!beliefSet.me || beliefSet.me.x == undefined || beliefSet.me.y == undefined || beliefSet.graph.grid === undefined || beliefSet.me.carrying.size == 0)
+    //     return false;
 
-    let deliveryTile = nearestDelivery(me, map);
+    let deliveryTile = nearestDelivery(me, map, graph);
     let carriedReward = getCarriedRewardAndTreshold(me, config)[0];
 
     const start = graph.grid[Math.round(me.x)][Math.round(me.y)];
@@ -73,23 +95,24 @@ export function canDeliverContentInTime(me, config) {
 
             timeForCarriedExpiration = carriedReward * parcelExpirationDuration;
         }
-    } else {
-        timeForCarriedExpiration = timeToDeliver + 1;
-    }
+    } else timeForCarriedExpiration = timeToDeliver + 1;
 
-    // console.log("timeToDeliver", timeToDeliver);
-    // console.log("timeForCarriedExpiration", timeForCarriedExpiration);
-
-    if (timeToDeliver < timeForCarriedExpiration) {
-        return true;
-    }
+    if (timeToDeliver < timeForCarriedExpiration) return true;
 
     return false;
 }
 
-export function findBestParcel(me, perceived_parcels, parcels, config) {
+/**
+ * @param {Me} me
+ * @param {Map<string, Parcel>} parcels
+ * @param {Config} config
+ * @param {GameMap} map
+ * @param {Graph} graph
+ * @returns {Intention | null}
+ */
+export function findBestParcel(me, parcels, config, map, graph) {
     const options = [];
-    for (const parcel of perceived_parcels.values())
+    for (const parcel of parcels.values())
         if (!parcel.carriedBy) options.push(["go_pick_up", parcel.x, parcel.y, parcel.id]);
 
     if (DEBUG) console.log("Options for picking up parcels:", options);
@@ -115,10 +138,10 @@ export function findBestParcel(me, perceived_parcels, parcels, config) {
     for (const option of options) {
         if (option[0] == "go_pick_up") {
             let [go_pick_up, x, y, id] = option;
-            let deliveryTile = nearestDelivery({ x, y }, map);
+            let deliveryTile = nearestDelivery({ x, y }, map, graph);
 
-            let parcelDistanceFromMe = distance({ x, y }, me);
-            let parcelDistanceFromDelivery = distance({ x, y }, deliveryTile);
+            let parcelDistanceFromMe = distance({ x, y }, me, graph);
+            let parcelDistanceFromDelivery = distance({ x, y }, deliveryTile, graph);
 
             let parcelValue = parcels.get(id).reward;
             let parcelFinalValue;
@@ -139,7 +162,15 @@ export function findBestParcel(me, perceived_parcels, parcels, config) {
     return best_option;
 }
 
-export function findAndPickUpNearParcels(me, parcels, config) {
+/**
+ * @param {Me} me
+ * @param {Map<string, Parcel>} parcels
+ * @param {Config} config
+ * @param {GameMap} map
+ * @param {Graph} graph
+ * @returns {Intention | null}
+ */
+export function findAndPickUpNearParcels(me, parcels, config, map, graph) {
     if (DEBUG) console.log("Checking if any new parcels can be picked up.");
     // if new parcels are around when delivering, control if taking them gets a higher reward
     // save current carrying
@@ -148,7 +179,7 @@ export function findAndPickUpNearParcels(me, parcels, config) {
     let me_carrying_new = new Map(me.carrying);
 
     // get best option (parcel)
-    let best_option = findBestParcel(me, parcels, parcels, config);
+    let best_option = findBestParcel(me, parcels, config, map, graph);
     if (best_option && me.carrying.size < 3) {
         if (DEBUG) console.log("Best parcel that can be picked up is:", best_option);
 
@@ -172,14 +203,14 @@ export function findAndPickUpNearParcels(me, parcels, config) {
         // console.log("expiration:", parcelExpirationDuration);
         best_option_p.reward =
             best_option_p.reward * parcelExpirationDuration -
-            distance({ x: best_option_x, y: best_option_y }, me) * 2 * config.MOVEMENT_DURATION * notInfinite;
+            distance({ x: best_option_x, y: best_option_y }, me, graph) * 2 * config.MOVEMENT_DURATION * notInfinite;
         if (notInfinite) best_option_p.reward = best_option_p.reward / 1000;
         let best_option_reward = best_option_p.reward;
 
         // set best option in new carrying
         me_carrying_new.set(best_option_id, best_option_p);
         me.carrying = me_carrying_new;
-        let newParcelIsDeliverable = canDeliverContentInTime(me, config);
+        let newParcelIsDeliverable = canDeliverContentInTime(me, map, graph, config);
         let newParcelCarriedRewardAndTreshold = getCarriedRewardAndTreshold(me, config);
         // console.log("new carrying:", me.carrying);
         // console.log("deliverable in time:", newParcelIsDeliverable);

@@ -1,7 +1,7 @@
 /**
  * Represents a parcel
  */
-export class Parcel {
+export default class Parcel {
     constructor() {
         /**
          * The ID of the parcel.

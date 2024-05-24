@@ -1,7 +1,7 @@
 /**
  * Represents game cofniguration
  */
-export class Config {
+export default class Config {
     constructor() {
         /**
          * The file path of the map.

@@ -1,29 +1,31 @@
-
-import { astar } from "../astar.js";
-import { graph } from "../../src/agentSolo/intention_revision.js";
+import { astar, Graph } from "../astar.js";
+import GameMap from "../../types/Map.js";
 
 //* DISTANCE
 
-export function distance({ x: x1, y: y1 }, { x: x2, y: y2 }) {
-    // const dx = Math.abs(Math.round(x1) - Math.round(x2));
-    // const dy = Math.abs(Math.round(y1) - Math.round(y2));
-    // return dx + dy;
+/**
+ * @param {{x: number, y: number}} a
+ * @param {{x: number, y: number}} b
+ * @param {Graph} graph
+ * @returns {number}
+ */
+export function distance({ x: x1, y: y1 }, { x: x2, y: y2 }, graph) {
     const start = graph.grid[Math.round(x1)][Math.round(y1)];
     const end = graph.grid[Math.round(x2)][Math.round(y2)];
     return astar.search(graph, start, end).length; // A* search
 }
 
-// export function nearestDelivery({ x, y }, map) {
-//     return Array.from(map.tiles.values())
-//         .filter(({ delivery }) => delivery)
-//         .sort((a, b) => distance(a, { x, y }) - distance(b, { x, y }))[0];
-// }
-
-export function nearestDelivery({ x, y }, map) {
+/**
+ * @param {{x: number, y: number}} param
+ * @param {GameMap} map
+ * @param {Graph} graph
+ * @returns {{x: number, y: number}}
+ */
+export function nearestDelivery({ x, y }, map, graph) {
     let minDistance = Infinity;
     let deliveryTile = null;
     for (const tile of map.deliveryTiles.values()) {
-        const d = distance({ x, y }, tile);
+        const d = distance({ x, y }, tile, graph);
         if (d < minDistance) {
             minDistance = d;
             deliveryTile = tile;

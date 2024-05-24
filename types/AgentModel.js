@@ -2,7 +2,7 @@
  * Represents an agent
  * @class
  */
-export class AgentModel {
+export default class AgentModel {
     constructor() {
         /**
          * The ID of the agent.

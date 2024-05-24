@@ -2,7 +2,7 @@
  * Represents Me agent
  * @class
  */
-export class Me {
+export default class Me {
     constructor() {
         /**
          * The ID of the Me instance.

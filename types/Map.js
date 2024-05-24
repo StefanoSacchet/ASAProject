@@ -1,7 +1,9 @@
+import Tile from "./Tile.js";
+
 /**
  * Represents the game map
  */
-export class GameMap {
+export default class GameMap {
     constructor() {
         /**
          * The width of the game map.
