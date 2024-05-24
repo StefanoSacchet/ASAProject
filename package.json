@@ -7,6 +7,8 @@
   "module": "index.js",
   "scripts": {
     "start": "node src/main.js",
+    "agentMaster": "node src/agentMaster.js",
+    "agentSlave": "node src/agentSlave.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {

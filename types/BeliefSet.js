@@ -21,6 +21,9 @@ export default class BeliefSet {
     /** @type {DeliverooApi} */
     client;
 
+    /** @type {string} */
+    communicationKey;
+
     /** @type {Array<Array<number>>} */
     matrix;
     /** @type {Graph} */

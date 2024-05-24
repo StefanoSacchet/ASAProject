@@ -5,6 +5,7 @@ import onMapCallback from "../../src/sensing/onMapCallBack.js";
 import onYouCallback from "../../src/sensing/onYouCallBack.js";
 import onAgentsSensingCallback from "../../src/sensing/onAgentSensingCallBack.js";
 import onParcelsSensingCallback from "../../src/sensing/onParcelSensingCallBack.js";
+import onMsgCallback from "../../src/communication/onMsgCallback.js";
 import IntentionRevisionReplace from "../../src/intentions/IntentionRevisionReplace.js";
 import Plan from "../../src/plans/Plan.js";
 import GoPickUp from "../../src/plans/GoPickUp.js";
@@ -33,17 +34,39 @@ export default class Agent {
     #onAgentsSensingCallback;
     /** @type {onParcelsSensingCallback} */
     #onParcelsSensingCallback;
+    /** @type {onMsgCallback} */
+    #onMsgCallback;
 
     /** @type {boolean} */
     #started;
 
-    constructor(onMapCallback, onYouCallback, onAgentsSensingCallback, onParcelsSensingCallback) {
-        this.#apiClient = new DeliverooApi(config.host, config.token);
+    /**
+     * @param {onMapCallback} onMapCallback
+     * @param {onYouCallback} onYouCallback
+     * @param {onAgentsSensingCallback} onAgentsSensingCallback
+     * @param {onParcelsSensingCallback} onParcelsSensingCallback
+     * @param {onMsgCallback} onMsgCallback
+     * @param {string} token
+     * @param {string} communicationKey
+     */
+    constructor(
+        onMapCallback,
+        onYouCallback,
+        onAgentsSensingCallback,
+        onParcelsSensingCallback,
+        onMsgCallback,
+        token = undefined,
+        communicationKey = ""
+    ) {
+        if (token === undefined) token = config.token;
+        this.#apiClient = new DeliverooApi(config.host, token);
         this.#beliefSet = new BeliefSet();
+        this.#beliefSet.communicationKey = communicationKey;
         this.#onMapCallback = onMapCallback;
         this.#onYouCallback = onYouCallback;
         this.#onAgentsSensingCallback = onAgentsSensingCallback;
         this.#onParcelsSensingCallback = onParcelsSensingCallback;
+        this.#onMsgCallback = onMsgCallback;
         this.#planLibrary.push(GoPickUp);
         this.#planLibrary.push(GoTo);
         this.#planLibrary.push(Patrolling);
@@ -56,6 +79,7 @@ export default class Agent {
         this.#apiClient.onConfig((config) => {
             this.#beliefSet.config = config;
             if (!this.#started) this.#started = true;
+            // this.#beliefSet.client.shout("Hello, I am here!");
         });
         this.#apiClient.onMap((width, height, tiles) => {
             this.#onMapCallback(width, height, tiles, this.#beliefSet);
@@ -68,6 +92,9 @@ export default class Agent {
         });
         this.#apiClient.onParcelsSensing((perceived_parcels) => {
             this.#onParcelsSensingCallback(perceived_parcels, this.#beliefSet, this.#myAgent);
+        });
+        this.#apiClient.onMsg((id, name, msg, reply) => {
+            this.#onMsgCallback(id, name, msg, reply, this.#beliefSet);
         });
 
         this.#beliefSet.client = this.#apiClient;
