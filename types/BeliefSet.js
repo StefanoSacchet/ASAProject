@@ -1,6 +1,6 @@
 import Config from "./Config.js";
 import AgentModel from "./AgentModel.js";
-import GameMap from "./Map.js";
+import GameMap from "./GameMap.js";
 import Me from "./Me.js";
 import Parcel from "./Parcel.js";
 import { Graph } from "../utils/astar.js";

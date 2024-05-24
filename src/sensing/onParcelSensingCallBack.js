@@ -1,7 +1,7 @@
-import Parcel from "../../types/Parcel.js";
-import BeliefSet from "../../types/BeliefSet.js";
 import { updateParcels, getCarriedRewardAndTreshold } from "../../utils/functions/parcelManagement.js";
 import { chooseBestOptionV2 } from "../../utils/functions/intentions.js";
+import Parcel from "../../types/Parcel.js";
+import BeliefSet from "../../types/BeliefSet.js";
 import IntentionRevisionReplace from "../intentions/IntentionRevisionReplace.js";
 
 /**

@@ -1,12 +1,12 @@
 import { DEBUG } from "../../config.js";
-import Parcel from "../../types/Parcel.js";
 import { astar } from "../astar.js";
+import { distance, nearestDelivery } from "./distance.js";
+import Parcel from "../../types/Parcel.js";
 import Intention from "../../src/intentions/Intention.js";
 import BeliefSet from "../../types/BeliefSet.js";
-import { distance, nearestDelivery } from "./distance.js";
 import Me from "../../types/Me.js";
 import Config from "../../types/Config.js";
-import GameMap from "../../types/Map.js";
+import GameMap from "../../types/GameMap.js";
 
 //* PARCEL MANAGEMENT
 

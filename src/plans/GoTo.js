@@ -1,6 +1,6 @@
+import { astar } from "../../utils/astar.js";
 import Plan from "./Plan.js";
 import BeliefSet from "../../types/BeliefSet.js";
-import { astar } from "../../utils/astar.js";
 
 export default class GoTo extends Plan {
     /**

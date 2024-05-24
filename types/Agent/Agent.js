@@ -1,7 +1,6 @@
 import { DeliverooApi } from "@unitn-asa/deliveroo-js-client";
 import config from "../../config.js";
 import BeliefSet from "../BeliefSet.js";
-import onConfigCallback from "../../src/sensing/onConfigCallBack.js";
 import onMapCallback from "../../src/sensing/onMapCallBack.js";
 import onYouCallback from "../../src/sensing/onYouCallBack.js";
 import onAgentsSensingCallback from "../../src/sensing/onAgentSensingCallBack.js";
@@ -26,8 +25,6 @@ export default class Agent {
     /** @type {IntentionRevisionReplace} */
     #myAgent;
 
-    /** @type {onConfigCallback} */
-    #onConfigCallback;
     /** @type {onMapCallback} */
     #onMapCallback;
     /** @type {onYouCallback} */
@@ -40,10 +37,9 @@ export default class Agent {
     /** @type {boolean} */
     #started;
 
-    constructor(onConfigCallback, onMapCallback, onYouCallback, onAgentsSensingCallback, onParcelsSensingCallback) {
+    constructor(onMapCallback, onYouCallback, onAgentsSensingCallback, onParcelsSensingCallback) {
         this.#apiClient = new DeliverooApi(config.host, config.token);
         this.#beliefSet = new BeliefSet();
-        this.#onConfigCallback = onConfigCallback;
         this.#onMapCallback = onMapCallback;
         this.#onYouCallback = onYouCallback;
         this.#onAgentsSensingCallback = onAgentsSensingCallback;

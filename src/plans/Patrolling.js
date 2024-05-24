@@ -1,7 +1,7 @@
 import { DEBUG } from "../../config.js";
+import { distance } from "../../utils/functions/distance.js";
 import Plan from "./Plan.js";
 import BeliefSet from "../../types/BeliefSet.js";
-import { distance } from "../../utils/functions/distance.js";
 import Tile from "../../types/Tile.js";
 
 export default class Patrolling extends Plan {

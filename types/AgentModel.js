@@ -3,35 +3,18 @@
  * @class
  */
 export default class AgentModel {
-    constructor() {
-        /**
-         * The ID of the agent.
-         * @type {string | undefined}
-         */
-        this.id = undefined;
+    /** @type {string | undefined} */
+    id;
 
-        /**
-         * The name of the agent.
-         * @type {string | undefined}
-         */
-        this.name = undefined;
+    /** @type {string | undefined} */
+    name;
 
-        /**
-         * The x-coordinate of the agent.
-         * @type {number | undefined}
-         */
-        this.x = undefined;
+    /** @type {number | undefined} */
+    x;
 
-        /**
-         * The y-coordinate of the agent.
-         * @type {number | undefined}
-         */
-        this.y = undefined;
+    /** @type {number | undefined} */
+    y;
 
-        /**
-         * The score of the agent.
-         * @type {number | undefined}
-         */
-        this.score = undefined;
-    }
+    /** @type {number | undefined} */
+    score;
 }

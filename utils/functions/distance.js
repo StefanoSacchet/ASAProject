@@ -1,5 +1,5 @@
 import { astar, Graph } from "../astar.js";
-import GameMap from "../../types/Map.js";
+import GameMap from "../../types/GameMap.js";
 
 //* DISTANCE
 

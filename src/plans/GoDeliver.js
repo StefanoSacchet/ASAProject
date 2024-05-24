@@ -1,6 +1,6 @@
+import { nearestDelivery } from "../../utils/functions/distance.js";
 import Plan from "./Plan.js";
 import BeliefSet from "../../types/BeliefSet.js";
-import { nearestDelivery } from "../../utils/functions/distance.js";
 
 export default class GoDeliver extends Plan {
     /**
