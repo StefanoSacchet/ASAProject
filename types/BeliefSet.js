@@ -22,7 +22,13 @@ export default class BeliefSet {
     client;
 
     /** @type {string} */
+    handShakeKey;
+
+    /** @type {string} */
     communicationKey;
+
+    /** @type {string} */
+    allayId;
 
     /** @type {Array<Array<number>>} */
     matrix;

@@ -1,4 +1,4 @@
-import { communicationKeys, tokens } from "../config.js";
+import { handShakeKey, communicationKey, tokens } from "../config.js";
 import Agent from "../types/Agent/Agent.js";
 import onMapCallback from "./sensing/onMapCallBack.js";
 import onYouCallback from "./sensing/onYouCallBack.js";
@@ -13,6 +13,7 @@ const agentSlave = new Agent(
     onParcelsSensingCallback,
     onMsgCallback,
     tokens[1], // agentSlave token
-    communicationKeys[1] // agentSlave communicationKey
+    handShakeKey,
+    communicationKey // used for all communications after handshake
 );
 await agentSlave.configure();

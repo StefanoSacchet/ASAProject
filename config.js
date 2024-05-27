@@ -1,3 +1,5 @@
+import { computeDigest } from "./utils/functions/crypto.js";
+
 // ste4
 const config = {
     host: "http://localhost:8080", // https://deliveroojs.onrender.com"
@@ -13,6 +15,14 @@ export const tokens = [
     "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjgwZTljMmI5YmIyIiwibmFtZSI6ImFnZW50QiIsImlhdCI6MTcxNjU3MTYxOH0.wIjgOVHFIVjfQMaHbTViORJSoZ4Diq2KESXNSBMgG4A",
 ];
 
-export const communicationKeys = ["agentMaster", "agentSlave"];
+const masterSecret = "master";
+const slaveSecret = "slave";
+const communicationSecret = "communication";
+
+// used for handshake
+export const handShakeKey = computeDigest(masterSecret);
+
+// used for all communications
+export const communicationKey = computeDigest(communicationSecret);
 
 export default config;

@@ -1,4 +1,5 @@
 import { DeliverooApi } from "@unitn-asa/deliveroo-js-client";
+import { TopicMsgEnum } from "../Message.js";
 import config from "../../config.js";
 import BeliefSet from "../BeliefSet.js";
 import onMapCallback from "../../src/sensing/onMapCallBack.js";
@@ -12,6 +13,7 @@ import GoPickUp from "../../src/plans/GoPickUp.js";
 import GoTo from "../../src/plans/GoTo.js";
 import Patrolling from "../../src/plans/Patrolling.js";
 import GoDeliver from "../../src/plans/GoDeliver.js";
+import Message from "../Message.js";
 
 export default class Agent {
     /** @type {DeliverooApi} */
@@ -47,6 +49,7 @@ export default class Agent {
      * @param {onParcelsSensingCallback} onParcelsSensingCallback
      * @param {onMsgCallback} onMsgCallback
      * @param {string} token
+     * @param {string} handShakeKey
      * @param {string} communicationKey
      */
     constructor(
@@ -56,11 +59,13 @@ export default class Agent {
         onParcelsSensingCallback,
         onMsgCallback,
         token = undefined,
-        communicationKey = ""
+        handShakeKey = "",
+        communicationKey = "",
     ) {
         if (token === undefined) token = config.token;
         this.#apiClient = new DeliverooApi(config.host, token);
         this.#beliefSet = new BeliefSet();
+        this.#beliefSet.handShakeKey = handShakeKey;
         this.#beliefSet.communicationKey = communicationKey;
         this.#onMapCallback = onMapCallback;
         this.#onYouCallback = onYouCallback;
@@ -79,7 +84,8 @@ export default class Agent {
         this.#apiClient.onConfig((config) => {
             this.#beliefSet.config = config;
             if (!this.#started) this.#started = true;
-            // this.#beliefSet.client.shout("Hello, I am here!");
+            const msg = new Message(TopicMsgEnum.HANDSHAKE_1, this.#beliefSet.handShakeKey, "Hello, I am here!");
+            this.#apiClient.shout(msg);
         });
         this.#apiClient.onMap((width, height, tiles) => {
             this.#onMapCallback(width, height, tiles, this.#beliefSet);
