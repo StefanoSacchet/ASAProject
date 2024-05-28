@@ -1,10 +1,12 @@
 export const TopicMsgEnum = Object.freeze({
     HANDSHAKE_1: "handshake_1",
     HANDSHAKE_2: "handshake_2",
+    NEW_PARCELS: "new_parcels",
+    NEW_AGENTS: "new_agents",
 });
 
 export default class Message {
-    /** @type {TopicEnum} */
+    /** @type {TopicMsgEnum} */
     topic;
 
     /** @type {string} */

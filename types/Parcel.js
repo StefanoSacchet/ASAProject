@@ -32,5 +32,8 @@ export default class Parcel {
          * @type {number | undefined}
          */
         this.reward = undefined;
+
+        /** @type {number | undefined} */
+        this.probability = undefined;
     }
 }

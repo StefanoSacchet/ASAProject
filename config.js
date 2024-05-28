@@ -20,9 +20,9 @@ const slaveSecret = "slave";
 const communicationSecret = "communication";
 
 // used for handshake
-export const handShakeKey = computeDigest(masterSecret);
+export const HANDSHAKE_KEY = computeDigest(masterSecret);
 
 // used for all communications
-export const communicationKey = computeDigest(communicationSecret);
+export const COMMUNICATION_KEY = computeDigest(communicationSecret);
 
 export default config;

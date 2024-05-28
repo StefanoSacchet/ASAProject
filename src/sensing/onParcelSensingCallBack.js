@@ -1,8 +1,11 @@
 import { updateParcels, getCarriedRewardAndTreshold } from "../../utils/functions/parcelManagement.js";
 import { chooseBestOptionV2 } from "../../utils/functions/intentions.js";
+import { TopicMsgEnum } from "../../types/Message.js";
 import Parcel from "../../types/Parcel.js";
 import BeliefSet from "../../types/BeliefSet.js";
 import IntentionRevisionReplace from "../intentions/IntentionRevisionReplace.js";
+import Message from "../../types/Message.js";
+import Say from "../plans/communicationPlans/Say.js";
 
 /**
  * @param {Array<Parcel>} perceived_parcels
@@ -11,18 +14,17 @@ import IntentionRevisionReplace from "../intentions/IntentionRevisionReplace.js"
  * @returns {Promise<void>}
  */
 export default async function onParcelsSensingCallback(perceived_parcels, beliefSet, myAgent) {
-    // remove expired parcels and update carriedBy
-    const isCarryingEmpty = updateParcels(perceived_parcels, beliefSet);
+    // remove expired parcels, add new ones and update carriedBy
+    const { isNewParcelSensed, isCarryingEmpty } = beliefSet.updateParcelsFromMsg(perceived_parcels);
+
     // clear intention if carrying is empty
     if (isCarryingEmpty) myAgent.clear();
 
-    // revisit beliefset revision so to trigger option generation only in the case a new parcel is observed
-    let new_parcel_sensed = false;
-    for (const p of perceived_parcels) {
-        if (!beliefSet.parcels.has(p.id)) new_parcel_sensed = true; // new parcel sensed
-        beliefSet.parcels.set(p.id, p); // update perceived parcels
-    }
-    if (!new_parcel_sensed) return;
+    if (!isNewParcelSensed) return;
+
+    // send new parcels sensed to allay
+    const msg = new Message(TopicMsgEnum.NEW_PARCELS, beliefSet.COMMUNICATION_KEY, perceived_parcels);
+    await new Say(beliefSet.allayId, msg).execute(beliefSet);
 
     // if patrolling and new parcels are observed, clear intention
     if (myAgent.intention_queue[0]?.predicate === "patrolling") myAgent.clear();
@@ -41,7 +43,7 @@ export default async function onParcelsSensingCallback(perceived_parcels, belief
      * Options generation
      */
     const options = [];
-    for (const parcel of perceived_parcels.values())
+    for (const parcel of beliefSet.parcels.values())
         if (!parcel.carriedBy) options.push(["go_pick_up", parcel.x, parcel.y, parcel.id]);
 
     // choose parcel based on reward and distance from me

@@ -14,6 +14,8 @@ import GoTo from "../../src/plans/GoTo.js";
 import Patrolling from "../../src/plans/Patrolling.js";
 import GoDeliver from "../../src/plans/GoDeliver.js";
 import Message from "../Message.js";
+import Shout from "../../src/plans/communicationPlans/Shout.js";
+import Config from "../Config.js";
 
 export default class Agent {
     /** @type {DeliverooApi} */
@@ -60,13 +62,13 @@ export default class Agent {
         onMsgCallback,
         token = undefined,
         handShakeKey = "",
-        communicationKey = "",
+        communicationKey = ""
     ) {
         if (token === undefined) token = config.token;
         this.#apiClient = new DeliverooApi(config.host, token);
         this.#beliefSet = new BeliefSet();
-        this.#beliefSet.handShakeKey = handShakeKey;
-        this.#beliefSet.communicationKey = communicationKey;
+        this.#beliefSet.HANDSHAKE_KEY = handShakeKey;
+        this.#beliefSet.COMMUNICATION_KEY = communicationKey;
         this.#onMapCallback = onMapCallback;
         this.#onYouCallback = onYouCallback;
         this.#onAgentsSensingCallback = onAgentsSensingCallback;
@@ -82,10 +84,10 @@ export default class Agent {
 
     async configure() {
         this.#apiClient.onConfig((config) => {
-            this.#beliefSet.config = config;
+            this.#beliefSet.config = new Config(config, config.CLOCK / 1000, 0.5);
             if (!this.#started) this.#started = true;
-            const msg = new Message(TopicMsgEnum.HANDSHAKE_1, this.#beliefSet.handShakeKey, "Hello, I am here!");
-            this.#apiClient.shout(msg);
+            const msg = new Message(TopicMsgEnum.HANDSHAKE_1, this.#beliefSet.HANDSHAKE_KEY, "Hello, I am here!");
+            new Shout(msg).execute(this.#beliefSet);
         });
         this.#apiClient.onMap((width, height, tiles) => {
             this.#onMapCallback(width, height, tiles, this.#beliefSet);
