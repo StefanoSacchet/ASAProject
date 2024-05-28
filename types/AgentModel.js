@@ -17,4 +17,7 @@ export default class AgentModel {
 
     /** @type {number | undefined} */
     score;
+
+    /** @type {number | undefined} */
+    probability;
 }

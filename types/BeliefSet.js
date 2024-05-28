@@ -46,15 +46,15 @@ export default class BeliefSet {
      * @param {Array<Parcel>} perceived_parcels
      * @returns {{isNewParcelSensed: boolean, isCarryingEmpty: boolean}}
      */
-    updateParcelsFromMsg(perceived_parcels) {
+    updateParcels(perceived_parcels) {
         let isNewParcelSensed = false;
         let isCarryingEmpty = false;
 
         for (const p of perceived_parcels) {
             if (!this.parcels.has(p.id)) isNewParcelSensed = true; // new parcel sensed
             else this.parcels.get(p.id).probability = 1;
-            p.probability = 1;
-            this.parcels.set(p.id, p); // update perceived parcels
+            const pCopy = { ...p, probability: 1 }; // create a copy of p and set probability to 1
+            this.parcels.set(pCopy.id, pCopy); // update perceived parcels
         }
 
         for (let parcel of this.parcels.values()) {
@@ -88,6 +88,24 @@ export default class BeliefSet {
             }
         }
 
-        return {isNewParcelSensed, isCarryingEmpty};
+        return { isNewParcelSensed, isCarryingEmpty };
+    }
+
+    /**
+     * @param {Array<AgentModel>} perceived_agents
+     */
+    updateAgents(perceived_agents) {
+        // update agents
+        perceived_agents.forEach((agent) => {
+            const aCopy = { ...agent, probability: 1 }; // create a copy of agent and set probability to 1
+            this.agents.set(aCopy.id, aCopy);
+        });
+
+        // delete agents not present anymore
+        for (const agent of this.agents.values()) {
+            if (!perceived_agents.find((a) => a.id === agent.id)) agent.probability -= this.config.AGENT_PROB_DECAY;
+
+            if (agent.probability < this.config.AGENT_PROB_TRHESHOLD) this.agents.delete(agent.id);
+        }
     }
 }

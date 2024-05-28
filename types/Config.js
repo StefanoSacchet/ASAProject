@@ -6,8 +6,10 @@ export default class Config {
      * @param {Object} config - The configuration parameters.
      * @param {number} PARCEL_PROB_DECAY - The decay rate for parcel probabilities.
      * @param {number} PARCEL_PROB_TRHESHOLD - The threshold for deciding to remove parcel.
+     * @param {number} AGENT_PROB_DECAY - The decay rate for agent probabilities.
+     * @param {number} AGENT_PROB_TRHESHOLD - The threshold for deciding to remove agent.
      */
-    constructor(config, PARCEL_PROB_DECAY, PARCEL_PROB_TRHESHOLD) {
+    constructor(config, PARCEL_PROB_DECAY, PARCEL_PROB_TRHESHOLD, AGENT_PROB_DECAY, AGENT_PROB_TRHESHOLD) {
         /**
          * The file path of the map.
          * @type {string | undefined}
@@ -97,9 +99,13 @@ export default class Config {
          * @type {number | undefined}
          */
         this.PARCEL_PROB_DECAY = PARCEL_PROB_DECAY;
-
         /** @type {number} */
         this.PARCEL_PROB_TRHESHOLD = PARCEL_PROB_TRHESHOLD;
+
+        /** @type {number} */
+        this.AGENT_PROB_DECAY = AGENT_PROB_DECAY;
+        /** @type {number} */
+        this.AGENT_PROB_TRHESHOLD = AGENT_PROB_TRHESHOLD;
     }
 
     /**

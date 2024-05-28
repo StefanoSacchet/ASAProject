@@ -15,7 +15,7 @@ import Say from "../plans/communicationPlans/Say.js";
  */
 export default async function onParcelsSensingCallback(perceived_parcels, beliefSet, myAgent) {
     // remove expired parcels, add new ones and update carriedBy
-    const { isNewParcelSensed, isCarryingEmpty } = beliefSet.updateParcelsFromMsg(perceived_parcels);
+    const { isNewParcelSensed, isCarryingEmpty } = beliefSet.updateParcels(perceived_parcels);
 
     // clear intention if carrying is empty
     if (isCarryingEmpty) myAgent.clear();

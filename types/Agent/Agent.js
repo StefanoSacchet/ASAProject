@@ -82,9 +82,29 @@ export default class Agent {
         this.#started = false;
     }
 
+    /** @param {Config} config
+     * @returns {Object}
+     */
+    getAdditionalConfig(config) {
+        const PARCEL_PROB_DECAY = config.CLOCK / 1000;
+        const PARCEL_PROB_TRHESHOLD = 0.5;
+        const AGENT_PROB_DECAY = 0.1;
+        const AGENT_PROB_TRHESHOLD = 0.6;
+
+        return { PARCEL_PROB_DECAY, PARCEL_PROB_TRHESHOLD, AGENT_PROB_DECAY, AGENT_PROB_TRHESHOLD };
+    }
+
     async configure() {
         this.#apiClient.onConfig((config) => {
-            this.#beliefSet.config = new Config(config, config.CLOCK / 1000, 0.5);
+            const { PARCEL_PROB_DECAY, PARCEL_PROB_TRHESHOLD, AGENT_PROB_DECAY, AGENT_PROB_TRHESHOLD } =
+                this.getAdditionalConfig(config);
+            this.#beliefSet.config = new Config(
+                config,
+                PARCEL_PROB_DECAY,
+                PARCEL_PROB_TRHESHOLD,
+                AGENT_PROB_DECAY,
+                AGENT_PROB_TRHESHOLD
+            );
             if (!this.#started) this.#started = true;
             const msg = new Message(TopicMsgEnum.HANDSHAKE_1, this.#beliefSet.HANDSHAKE_KEY, "Hello, I am here!");
             new Shout(msg).execute(this.#beliefSet);

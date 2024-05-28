@@ -41,7 +41,12 @@ export default async function onMsgCallback(id, name, msg, reply, beliefSet) {
     switch (msg.topic) {
         case TopicMsgEnum.NEW_PARCELS: // new parcels sensed
             if (DEBUG) console.log("New parcels arrived");
-            beliefSet.updateParcelsFromMsg(msg.content);
+            beliefSet.updateParcels(msg.content);
+            break;
+
+        case TopicMsgEnum.NEW_AGENTS: // new agents sensed
+            if (DEBUG) console.log("New agents arrived");
+            beliefSet.updateAgents(msg.content);
             break;
     }
 }
