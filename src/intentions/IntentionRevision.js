@@ -59,7 +59,6 @@ export default class IntentionRevision {
                     console.log("=========================================================");
                 }
 
-                //? maybe use a switch statement or a class-based approach
                 switch (intention.predicate[0]) {
                     case "go_pick_up": {
                         let id = intention.predicate[3];

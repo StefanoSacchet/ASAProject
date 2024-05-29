@@ -5,7 +5,7 @@ import BeliefSet from "../../types/BeliefSet.js";
 /**
  * @param {number} width
  * @param {number} height
- * @param {Array<Tile}
+ * @param {Array<Tile>} tiles
  * @param {BeliefSet} beliefSet
  * @returns {Promise<void>}
  */

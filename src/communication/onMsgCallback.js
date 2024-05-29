@@ -33,11 +33,6 @@ export default async function onMsgCallback(id, name, msg, reply, beliefSet) {
         return;
     }
 
-    // Convert object to Map
-    // if (typeof msg.content === "object" && msg.content !== null) {
-    //     msg.content = new Map(Object.entries(msg.content));
-    // }
-
     switch (msg.topic) {
         case TopicMsgEnum.NEW_PARCELS: // new parcels sensed
             if (DEBUG) console.log("New parcels arrived");
