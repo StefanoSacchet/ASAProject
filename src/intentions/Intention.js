@@ -1,5 +1,7 @@
 import { DEBUG } from "../../config.js";
 import Plan from "../plans/Plan.js";
+import BeliefSet from "../../types/BeliefSet.js";
+import Planner from "../../types/Planner.js";
 
 /**
  * Intention
@@ -23,6 +25,11 @@ export default class Intention {
      * #parent refers to caller
      */
     #parent;
+    
+    /**
+     * planner of the parent intention
+     */
+    planner;
 
     /**
      * predicate is in the form ['go_to', x, y]
@@ -47,50 +54,61 @@ export default class Intention {
     #started = false;
     /**
      * Using the plan library to achieve an intention
-     * @param {Array<Plan>} planLibrary
      * @param {BeliefSet} beliefSet
+     * @param {Planner} planner
      */
-    async achieve(planLibrary, beliefSet) {
+    async achieve(beliefSet, planner=undefined) {
         // Cannot start twice
         if (this.#started) return this;
         else this.#started = true;
 
-        // Trying all plans in the library
-        for (const planClass of planLibrary) {
-            // if stopped then quit
-            if (this.stopped) throw ["stopped intention", ...this.predicate];
+        console.log("AAAAAAAa", this.predicate[0]);
+        console.log(planner);
 
-            // if plan is 'statically' applicable
-            if (planClass.isApplicableTo(...this.predicate)) {
-                // plan is instantiated
-                this.#current_plan = new planClass(this.#parent, beliefSet, planLibrary);
-                this.log("achieving intention", ...this.predicate, "with plan", planClass.name);
-                // and plan is executed and result returned
-                try {
-                    const plan_res = await this.#current_plan.execute(...this.predicate);
-                    this.log(
-                        "succesful intention",
-                        ...this.predicate,
-                        "with plan",
-                        planClass.name,
-                        "with result:",
-                        plan_res
-                    );
-                    return plan_res;
-                    // or errors are caught so to continue with next plan
-                } catch (error) {
-                    this.log(
-                        "failed intention",
-                        ...this.predicate,
-                        "with plan",
-                        planClass.name,
-                        "with error:",
-                        ...error
-                    );
+        if (this.predicate[0] == "go_to" && this.#parent) planner = this.#parent.planner; 
+
+        // TODO: avoid using pddl when collaborative action is started
+        if (planner && planner.pddl && this.predicate[0] == "go_to") {
+            console.log("Using pddl");
+            while(1);
+        }
+        else {
+            // Trying all plans in the library
+            for (const planClass of planner.planLibrary) {
+                // if stopped then quit
+                if (this.stopped) throw ["stopped intention", ...this.predicate];
+
+                // if plan is 'statically' applicable
+                if (planClass.isApplicableTo(...this.predicate)) {
+                    // plan is instantiated
+                    this.#current_plan = new planClass(this.#parent, beliefSet, planner);
+                    this.log("achieving intention", ...this.predicate, "with plan", planClass.name);
+                    // and plan is executed and result returned
+                    try {
+                        const plan_res = await this.#current_plan.execute(...this.predicate);
+                        this.log(
+                            "succesful intention",
+                            ...this.predicate,
+                            "with plan",
+                            planClass.name,
+                            "with result:",
+                            plan_res
+                        );
+                        return plan_res;
+                        // or errors are caught so to continue with next plan
+                    } catch (error) {
+                        this.log(
+                            "failed intention",
+                            ...this.predicate,
+                            "with plan",
+                            planClass.name,
+                            "with error:",
+                            ...error
+                        );
+                    }
                 }
             }
         }
-
         // if stopped then quit
         if (this.stopped) throw ["stopped intention", ...this.predicate];
 
@@ -98,4 +116,5 @@ export default class Intention {
         // this.log( 'no plan satisfied the intention ', ...this.predicate );
         throw ["no plan satisfied the intention ", ...this.predicate];
     }
+
 }

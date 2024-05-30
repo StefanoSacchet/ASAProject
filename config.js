@@ -4,11 +4,11 @@ const config = {
     token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjIxYzcyYjlhN2JkIiwibmFtZSI6InN0ZTQiLCJpYXQiOjE3MTYzOTU0NjJ9.XycBKqifC-Ce7rHkFWfWM61A8R6ySeLdBMj4mqEzYwI",
 };
 
-export const DEBUG = false;
+export const DEBUG = true;
 
 export const tokens = [
     // agentA
-    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6Ijg4ODBlOWMyYjliIiwibmFtZSI6ImFnZW50QSIsImlhdCI6MTcxNjU3MTU4OH0.NCZ8VSuxL9fKpTgbHkZ4v1pftwDoFh2ASsXdBNDEZD4",
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjkxMjIyMTM1MjQ5IiwibmFtZSI6InN0ZTQiLCJpYXQiOjE3MTY5OTMzNDd9.3_xYVTEJdsFRgFNjy6bnQLDz6P0NpkF6ZSOd3U_ObT4",
     // agentB
     "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjgwZTljMmI5YmIyIiwibmFtZSI6ImFnZW50QiIsImlhdCI6MTcxNjU3MTYxOH0.wIjgOVHFIVjfQMaHbTViORJSoZ4Diq2KESXNSBMgG4A",
 ];

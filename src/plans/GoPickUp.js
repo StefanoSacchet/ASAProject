@@ -5,10 +5,10 @@ import BeliefSet from "../../types/BeliefSet.js";
 export default class GoPickUp extends Plan {
     /**
      * @param {BeliefSet} beliefSet
-     * @param {Array<Plan>} planLibrary
+     * @param {Planner} planner
      */
-    constructor(parent, beliefSet, planLibrary) {
-        super(parent, beliefSet, planLibrary);
+    constructor(parent, beliefSet, planner=undefined) {
+        super(parent, beliefSet, planner);
     }
 
     static isApplicableTo(go_pick_up, x, y, id) {

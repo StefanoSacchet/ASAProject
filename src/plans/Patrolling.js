@@ -10,10 +10,10 @@ export default class Patrolling extends Plan {
 
     /**
      * @param {BeliefSet} beliefSet
-     * @param {Array<Plan>} planLibrary
+     * @param {Planner} planner
      */
-    constructor(parent, beliefSet, planLibrary) {
-        super(parent, beliefSet, planLibrary);
+    constructor(parent, beliefSet, planner=undefined) {
+        super(parent, beliefSet, planner);
     }
 
     moveToSpawner() {

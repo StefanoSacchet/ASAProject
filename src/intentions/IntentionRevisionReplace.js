@@ -8,9 +8,10 @@ export default class IntentionRevisionReplace extends IntentionRevision {
     /**
      * @param {BeliefSet} beliefSet
      * @param {Array<Plan>} planLibrary
+     * @param {Planner} planner
      */
-    constructor(beliefSet, planLibrary) {
-        super(beliefSet, planLibrary);
+    constructor(beliefSet, planLibrary, planner) {
+        super(beliefSet, planLibrary, planner);
     }
 
     async push(predicate) {

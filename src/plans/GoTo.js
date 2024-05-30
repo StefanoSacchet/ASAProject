@@ -5,10 +5,10 @@ import BeliefSet from "../../types/BeliefSet.js";
 export default class GoTo extends Plan {
     /**
      * @param {BeliefSet} beliefSet
-     * @param {Array<Plan>} planLibrary
+     * @param {Planner} planner
      */
-    constructor(parent, beliefSet, planLibrary) {
-        super(parent, beliefSet, planLibrary);
+    constructor(parent, beliefSet, planner=undefined) {
+        super(parent, beliefSet, planner);
     }
 
     isAboveDelivery() {
@@ -53,7 +53,7 @@ export default class GoTo extends Plan {
         const end = this.beliefSet.graph.grid[x][y];
         const res = astar.search(this.beliefSet.graph, start, end); // A* search
 
-        if (res.length == 0) throw ["no path found"]; // if no path found then quit
+        if (res.length == 0 && (this.beliefSet.me.x != x || this.beliefSet.me.y != y)) throw ["no path found"]; // if no path found then quit
 
         let status_x = false;
         let status_y = false;

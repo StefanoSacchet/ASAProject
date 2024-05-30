@@ -2,6 +2,8 @@ import { DEBUG } from "../../config.js";
 import { canDeliverContentInTime, findAndPickUpNearParcels } from "../../utils/functions/parcelManagement.js";
 import Intention from "./Intention.js";
 import Plan from "../plans/Plan.js";
+import BeliefSet from "../../types/BeliefSet.js";
+import Planner from "../../types/Planner.js";
 
 /**
  * Intention revision loop
@@ -9,16 +11,16 @@ import Plan from "../plans/Plan.js";
 export default class IntentionRevision {
     /** @type {BeliefSet} */
     beliefSet;
-    /** @type {Array<Plan>} */
-    planLibrary;
+    /** @type {Planner} */
+    planner;
 
     /**
      * @param {BeliefSet} beliefSet
-     * @param {Array<Plan>} planLibrary
+     * @param {Planner} planner
      */
-    constructor(beliefSet, planLibrary) {
+    constructor(beliefSet, planner=undefined) {
         this.beliefSet = beliefSet;
-        this.planLibrary = planLibrary;
+        this.planner = planner;
     }
 
     /**
@@ -148,7 +150,7 @@ export default class IntentionRevision {
 
                 // Start achieving intention
                 await intention
-                    .achieve(this.planLibrary, this.beliefSet)
+                    .achieve(this.beliefSet, this.planner)
                     // Catch eventual error and continue
                     .catch((error) => {
                         if (DEBUG) console.log("Failed intention", ...intention.predicate, "with error:", error);

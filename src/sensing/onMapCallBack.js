@@ -7,9 +7,10 @@ import BeliefSet from "../../types/BeliefSet.js";
  * @param {number} height
  * @param {Array<Tile}
  * @param {BeliefSet} beliefSet
+ * @param {Planner} planner
  * @returns {Promise<void>}
  */
-export default async function onMapCallback(width, height, tiles, beliefSet) {
+export default async function onMapCallback(width, height, tiles, beliefSet, planner) {
     // update map
     beliefSet.map.width = width;
     beliefSet.map.height = height;
@@ -30,4 +31,5 @@ export default async function onMapCallback(width, height, tiles, beliefSet) {
         beliefSet.matrix[tile.x][tile.y] = 1;
     });
     beliefSet.graph = new Graph(beliefSet.matrix);
+    console.log(tiles);
 }

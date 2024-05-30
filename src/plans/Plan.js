@@ -2,9 +2,6 @@ import { DEBUG } from "../../config.js";
 import BeliefSet from "../../types/BeliefSet.js";
 import Intention from "../intentions/Intention.js";
 
-/**
- * Plan library
- */
 export default class Plan {
     // This is used to stop the plan
     #stopped = false;
@@ -26,12 +23,12 @@ export default class Plan {
 
     /**
      * @param {BeliefSet} beliefSet
-     * @param {Array<Plan>} planLibrary
+     * @param {Planner} planner
      */
-    constructor(parent, beliefSet, planLibrary) {
+    constructor(parent, beliefSet, planner=undefined) {
         this.#parent = parent;
         this.beliefSet = beliefSet;
-        this.planLibrary = planLibrary;
+        this.planner = planner;
     }
 
     log(...args) {
@@ -45,6 +42,6 @@ export default class Plan {
     async subIntention(predicate) {
         const sub_intention = new Intention(this, predicate);
         this.#sub_intentions.push(sub_intention);
-        return await sub_intention.achieve(this.planLibrary, this.beliefSet);
+        return await sub_intention.achieve(this.beliefSet, this.planner);
     }
 }
