@@ -39,7 +39,8 @@ export default class IntentionRevision {
 
     idle = ["patrolling"];
 
-    async loop() {
+    /** @param {boolean} started */
+    async loop(started) {
         while (true) {
             // Consumes intention_queue if not empty
             if (this.intention_queue.length > 0) {
@@ -88,8 +89,9 @@ export default class IntentionRevision {
                                 this.beliefSet.graph
                             );
                             if (new_intention) {
+                                this.clear();
                                 this.intention_queue.push(new_intention);
-                                this.intention_queue.shift();
+                                // this.intention_queue.shift();
                                 continue;
                             }
                             // control if the agent is carrying parcels and if the reward can be delivered in time
@@ -172,6 +174,11 @@ export default class IntentionRevision {
             // Postpone next iteration at setImmediate
             await new Promise((res) => setImmediate(res));
         }
+    }
+
+    async clear() {
+        this.intention_queue.forEach((i) => i.stop());
+        this.intention_queue = [];
     }
 
     // async push ( predicate ) { }

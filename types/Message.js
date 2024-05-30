@@ -10,8 +10,8 @@ export const TopicMsgEnum = Object.freeze({
 });
 
 export const CollabRoles = Object.freeze({
-    DELIVER: "deliver",
-    PICK_UP: "pick_up",
+    DELIVER: "deliver", // slave
+    PICK_UP: "pick_up", // master
 });
 
 export default class Message {

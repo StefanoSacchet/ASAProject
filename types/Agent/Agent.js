@@ -119,7 +119,8 @@ export default class Agent {
                 const myTile = nearestDelivery(this.#beliefSet.me, this.#beliefSet.map, this.#beliefSet.graph);
                 start = this.#beliefSet.graph.grid[Math.round(this.#beliefSet.me.x)][Math.round(this.#beliefSet.me.y)];
                 end = this.#beliefSet.graph.grid[myTile.x][myTile.y];
-                const myDistance = astar.search(this.#beliefSet.graph, start, end);
+                let myDistance = astar.search(this.#beliefSet.graph, start, end).length;
+                if (myDistance === 0) myDistance = Infinity;
 
                 const allayTile = nearestDelivery(
                     this.#beliefSet.allayInfo,
@@ -131,10 +132,20 @@ export default class Agent {
                         Math.round(this.#beliefSet.allayInfo.y)
                     ];
                 end = this.#beliefSet.graph.grid[allayTile.x][allayTile.y];
-                const allayDistance = astar.search(this.#beliefSet.graph, start, end);
+                let allayDistance = astar.search(this.#beliefSet.graph, start, end).length;
+                if (allayDistance.length === 0) allayDistance = Infinity;
 
-                if (myDistance.length < allayDistance.length) this.#beliefSet.collabRole = CollabRoles.DELIVER;
+                const myId = this.#apiClient.id;
+                const allayId = this.#beliefSet.allayId;
+                if (myDistance === allayDistance) {
+                    if (myId.localeCompare(allayId) > 0) allayDistance += 1;
+                    else myDistance += 1;
+                }
+
+                if (myDistance < allayDistance) this.#beliefSet.collabRole = CollabRoles.DELIVER;
                 else this.#beliefSet.collabRole = CollabRoles.PICK_UP;
+
+                console.log("Collaboration role:", this.#beliefSet.collabRole);
 
                 break;
             }
@@ -155,7 +166,6 @@ export default class Agent {
                 AGENT_PROB_DECAY,
                 AGENT_PROB_TRHESHOLD
             );
-            if (!this.#started) this.#started = true;
             const msg = new Message(TopicMsgEnum.HANDSHAKE_1, this.#beliefSet.HANDSHAKE_KEY, "Hello, I am here!");
             new Shout(msg).execute(this.#beliefSet);
         });
@@ -178,6 +188,6 @@ export default class Agent {
         this.#beliefSet.client = this.#apiClient;
 
         this.loop();
-        this.#myAgent.loop();
+        this.#myAgent.loop(this.#started);
     }
 }

@@ -47,13 +47,19 @@ export default class GoDeliver extends Plan {
             const end = this.beliefSet.graph.grid[deliveryTile.x][deliveryTile.y];
             /** @type {Array<GridNode>} */
             const path = astar.search(this.beliefSet.graph, start, end);
-            deliveryTile = this.findDeliveryTileBeforeCorridor(path);
-            // deliveryTile = path[Math.floor(path.length / 2)]; //actually the middle of the path
+            if (path.length === 0) {
+                const msg = new Message(TopicMsgEnum.NEW_INTENTION, this.beliefSet.COMMUNICATION_KEY, ["go_deliver"]);
+                new Say(this.beliefSet.allayId, msg).execute(this.beliefSet);
+                // if no path found then quit
+                throw ["no path found"];
+            }
+            deliveryTile = this.findDeliveryTileBeforeCorridor(path); // delivery tile juat before the corridor
+            if (!deliveryTile) deliveryTile = path[Math.round(path.length / 2) - 1]; // middle of the path
 
-            // tell the other agent to go to the middle of the path
+            // tell the other agent to go to the delivery tile
             const intention = ["go_pick_up", deliveryTile.x, deliveryTile.y, "s1"];
             const msg = new Message(TopicMsgEnum.NEW_INTENTION, this.beliefSet.COMMUNICATION_KEY, intention);
-            await new Say(this.beliefSet.allayId, msg).execute(this.beliefSet);
+            new Say(this.beliefSet.allayId, msg).execute(this.beliefSet);
         }
 
         await this.subIntention(["go_to", deliveryTile.x, deliveryTile.y]);
@@ -65,7 +71,7 @@ export default class GoDeliver extends Plan {
         // empty carrying
         this.beliefSet.me.carrying.clear();
 
-        await this.subIntention(["patrolling"]);
+        // await this.subIntention(["patrolling"]);
 
         return true;
     }

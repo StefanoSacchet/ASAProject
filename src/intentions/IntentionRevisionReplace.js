@@ -46,10 +46,10 @@ export default class IntentionRevisionReplace extends IntentionRevision {
         }
     }
 
-    async clear() {
-        this.intention_queue.forEach((i) => i.stop());
-        this.intention_queue = [];
-    }
+    // async clear() {
+    //     this.intention_queue.forEach((i) => i.stop());
+    //     this.intention_queue = [];
+    // }
 }
 
 //* Other possible implementations

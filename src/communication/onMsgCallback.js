@@ -43,7 +43,7 @@ export default async function onMsgCallback(id, name, msg, reply, beliefSet, myA
 
         case TopicMsgEnum.NEW_AGENTS: // new agents sensed
             if (DEBUG) console.log("New agents arrived");
-            beliefSet.updateAgents(msg.content);
+            // beliefSet.updateAgents(msg.content);
             break;
 
         case TopicMsgEnum.ME: // allay's me message
@@ -64,7 +64,7 @@ export default async function onMsgCallback(id, name, msg, reply, beliefSet, myA
 
         case TopicMsgEnum.INTENTION_COMPLETED: // intention completed message
             if (DEBUG) console.log("Intention completed message");
-            new Message(TopicMsgEnum.INTENTION_COMPLETED, beliefSet.COMMUNICATION_KEY, ["go_deliver"]);
+            new Message(TopicMsgEnum.NEW_INTENTION, beliefSet.COMMUNICATION_KEY, ["go_deliver"]);
             await new Say(beliefSet.allayId, msg).execute(beliefSet);
             break;
     }
