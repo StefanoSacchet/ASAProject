@@ -1,6 +1,8 @@
 import { DEBUG } from "../../config.js";
 import Plan from "./Plan.js";
 import BeliefSet from "../../types/BeliefSet.js";
+import Message, { CollabRoles, TopicMsgEnum } from "../../types/Message.js";
+import Say from "./communicationPlans/Say.js";
 
 export default class GoPickUp extends Plan {
     /**
@@ -22,6 +24,11 @@ export default class GoPickUp extends Plan {
         let pickup = await this.beliefSet.client.pickup();
         if (this.stopped) throw ["stopped"];
         if (go_to && !(pickup == []) && pickup.length > 0) {
+            if (this.beliefSet.collabRole === CollabRoles.DELIVER && id === "s1") {
+                const msg = new Message(TopicMsgEnum.INTENTION_COMPLETED, this.beliefSet.COMMUNICATION_KEY, id);
+                await new Say(this.beliefSet.allayId, msg).execute(this.beliefSet);
+            }
+
             if (DEBUG) console.log("Gopickup", go_to, pickup);
             // if (DEBUG) console.log("picked up", id);
             this.beliefSet.me.carrying.set(id, this.beliefSet.parcels.get(id));

@@ -1,6 +1,7 @@
 import { astar } from "../../utils/astar.js";
 import Plan from "./Plan.js";
 import BeliefSet from "../../types/BeliefSet.js";
+import { CollabRoles } from "../../types/Message.js";
 
 export default class GoTo extends Plan {
     /**
@@ -64,10 +65,12 @@ export default class GoTo extends Plan {
                 this.beliefSet.client.putdown();
                 this.beliefSet.me.carrying.clear();
             }
-            const parcel = this.isAbovePickup();
-            if (parcel) {
-                this.beliefSet.client.pickup();
-                this.beliefSet.me.carrying.set(parcel.id, parcel);
+            if (this.beliefSet.collabRole === CollabRoles.DELIVER || !this.beliefSet.collabRole) {
+                const parcel = this.isAbovePickup();
+                if (parcel) {
+                    this.beliefSet.client.pickup();
+                    this.beliefSet.me.carrying.set(parcel.id, parcel);
+                }
             }
 
             if (this.stopped) throw ["stopped"]; // if stopped then quit

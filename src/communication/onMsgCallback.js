@@ -3,6 +3,7 @@ import { TopicMsgEnum } from "../../types/Message.js";
 import BeliefSet from "../../types/BeliefSet.js";
 import Message from "../../types/Message.js";
 import Say from "../plans/communicationPlans/Say.js";
+import IntentionRevisionReplace from "../intentions/IntentionRevisionReplace.js";
 
 /**
  * @param {string} id
@@ -10,9 +11,10 @@ import Say from "../plans/communicationPlans/Say.js";
  * @param {Message} msg
  * @param {function(string): any} reply
  * @param {BeliefSet} beliefSet
+ * @param {IntentionRevisionReplace} myAgent
  * @returns {Promise<void>}
  */
-export default async function onMsgCallback(id, name, msg, reply, beliefSet) {
+export default async function onMsgCallback(id, name, msg, reply, beliefSet, myAgent) {
     // handshake from master
     if (msg.topic === TopicMsgEnum.HANDSHAKE_1 && msg.token === beliefSet.HANDSHAKE_KEY) {
         const msg = new Message(TopicMsgEnum.HANDSHAKE_2, beliefSet.HANDSHAKE_KEY, "Hello, I am here!");
@@ -42,6 +44,28 @@ export default async function onMsgCallback(id, name, msg, reply, beliefSet) {
         case TopicMsgEnum.NEW_AGENTS: // new agents sensed
             if (DEBUG) console.log("New agents arrived");
             beliefSet.updateAgents(msg.content);
+            break;
+
+        case TopicMsgEnum.ME: // allay's me message
+            if (DEBUG) console.log("Allay's me message");
+            beliefSet.allayInfo = msg.content;
+            break;
+
+        case TopicMsgEnum.COLLAB: // collaboration message
+            if (DEBUG) console.log("Collaboration message");
+            // myAgent.clear();
+            break;
+
+        case TopicMsgEnum.NEW_INTENTION: // new intention message
+            if (DEBUG) console.log("New intention message");
+            myAgent.clear();
+            myAgent.push(msg.content); // push new intention
+            break;
+
+        case TopicMsgEnum.INTENTION_COMPLETED: // intention completed message
+            if (DEBUG) console.log("Intention completed message");
+            new Message(TopicMsgEnum.INTENTION_COMPLETED, beliefSet.COMMUNICATION_KEY, ["go_deliver"]);
+            await new Say(beliefSet.allayId, msg).execute(beliefSet);
             break;
     }
 }

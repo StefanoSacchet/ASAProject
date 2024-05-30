@@ -1,4 +1,4 @@
-import { Graph } from "../utils/astar.js";
+import { Graph, GridNode } from "../utils/astar.js";
 import { DeliverooApi } from "@unitn-asa/deliveroo-js-client";
 import { DEBUG } from "../config.js";
 import Config from "./Config.js";
@@ -29,6 +29,17 @@ export default class BeliefSet {
 
     /** @type {string} */
     allayId;
+    /** @type {Me} */
+    allayInfo;
+
+    /**
+     * deliver | pick_up
+     * @type {string}
+     */
+    collabRole;
+
+    /** @type {Array<Array<GridNode>>} */
+    pathWithCorridors;
 
     /** @type {Array<Array<number>>} */
     matrix;

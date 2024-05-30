@@ -16,6 +16,9 @@ import GoDeliver from "../../src/plans/GoDeliver.js";
 import Message from "../Message.js";
 import Shout from "../../src/plans/communicationPlans/Shout.js";
 import Config from "../Config.js";
+import { nearestDelivery } from "../../utils/functions/distance.js";
+import { astar } from "../../utils/astar.js";
+import { CollabRoles } from "../Message.js";
 
 export default class Agent {
     /** @type {DeliverooApi} */
@@ -94,6 +97,53 @@ export default class Agent {
         return { PARCEL_PROB_DECAY, PARCEL_PROB_TRHESHOLD, AGENT_PROB_DECAY, AGENT_PROB_TRHESHOLD };
     }
 
+    async loop() {
+        while (true) {
+            if (
+                this.#beliefSet.pathWithCorridors?.length > 0 &&
+                this.#beliefSet.graph &&
+                this.#beliefSet.me.id &&
+                this.#beliefSet.allayInfo
+            ) {
+                // if the two agents can not reach each other don't collaborate
+                let start =
+                    this.#beliefSet.graph.grid[Math.round(this.#beliefSet.me.x)][Math.round(this.#beliefSet.me.y)];
+                let end =
+                    this.#beliefSet.graph.grid[Math.round(this.#beliefSet.allayInfo.x)][
+                        Math.round(this.#beliefSet.allayInfo.y)
+                    ];
+                const path = astar.search(this.#beliefSet.graph, start, end);
+                if (path.length === 0) break;
+
+                // calculate the agent closer to the delivery
+                const myTile = nearestDelivery(this.#beliefSet.me, this.#beliefSet.map, this.#beliefSet.graph);
+                start = this.#beliefSet.graph.grid[Math.round(this.#beliefSet.me.x)][Math.round(this.#beliefSet.me.y)];
+                end = this.#beliefSet.graph.grid[myTile.x][myTile.y];
+                const myDistance = astar.search(this.#beliefSet.graph, start, end);
+
+                const allayTile = nearestDelivery(
+                    this.#beliefSet.allayInfo,
+                    this.#beliefSet.map,
+                    this.#beliefSet.graph
+                );
+                start =
+                    this.#beliefSet.graph.grid[Math.round(this.#beliefSet.allayInfo.x)][
+                        Math.round(this.#beliefSet.allayInfo.y)
+                    ];
+                end = this.#beliefSet.graph.grid[allayTile.x][allayTile.y];
+                const allayDistance = astar.search(this.#beliefSet.graph, start, end);
+
+                if (myDistance.length < allayDistance.length) this.#beliefSet.collabRole = CollabRoles.DELIVER;
+                else this.#beliefSet.collabRole = CollabRoles.PICK_UP;
+
+                break;
+            }
+
+            // Postpone next iteration at setImmediate
+            await new Promise((res) => setImmediate(res));
+        }
+    }
+
     async configure() {
         this.#apiClient.onConfig((config) => {
             const { PARCEL_PROB_DECAY, PARCEL_PROB_TRHESHOLD, AGENT_PROB_DECAY, AGENT_PROB_TRHESHOLD } =
@@ -122,11 +172,12 @@ export default class Agent {
             this.#onParcelsSensingCallback(perceived_parcels, this.#beliefSet, this.#myAgent);
         });
         this.#apiClient.onMsg((id, name, msg, reply) => {
-            this.#onMsgCallback(id, name, msg, reply, this.#beliefSet);
+            this.#onMsgCallback(id, name, msg, reply, this.#beliefSet, this.#myAgent);
         });
 
         this.#beliefSet.client = this.#apiClient;
 
+        this.loop();
         this.#myAgent.loop();
     }
 }

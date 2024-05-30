@@ -2,6 +2,9 @@ import { DEBUG } from "../../config.js";
 import { canDeliverContentInTime, findAndPickUpNearParcels } from "../../utils/functions/parcelManagement.js";
 import Intention from "./Intention.js";
 import Plan from "../plans/Plan.js";
+import Message, { CollabRoles, TopicMsgEnum } from "../../types/Message.js";
+import BeliefSet from "../../types/BeliefSet.js";
+import Say from "../plans/communicationPlans/Say.js";
 
 /**
  * Intention revision loop
@@ -59,90 +62,97 @@ export default class IntentionRevision {
                     console.log("=========================================================");
                 }
 
-                switch (intention.predicate[0]) {
-                    case "go_pick_up": {
-                        let id = intention.predicate[3];
-                        let p = this.beliefSet.parcels.get(id);
-                        if (p && p.carriedBy) {
-                            if (DEBUG)
-                                console.log("Pick up intention isn't valid anymore. Predicate:", intention.predicate);
-                            this.intention_queue.shift();
-                            continue;
+                if (this.beliefSet.collabRole !== CollabRoles.DELIVER) {
+                    switch (intention.predicate[0]) {
+                        case "go_pick_up": {
+                            let id = intention.predicate[3];
+                            let p = this.beliefSet.parcels.get(id);
+                            if (p && p.carriedBy) {
+                                if (DEBUG)
+                                    console.log(
+                                        "Pick up intention isn't valid anymore. Predicate:",
+                                        intention.predicate
+                                    );
+                                this.intention_queue.shift();
+                                continue;
+                            }
+                            break;
                         }
-                        break;
-                    }
-                    case "patrolling": {
-                        // check if new parcels have spawned near the agent
-                        const new_intention = findAndPickUpNearParcels(
-                            this.beliefSet.me,
-                            this.beliefSet.parcels,
-                            this.beliefSet.config,
-                            this.beliefSet.map,
-                            this.beliefSet.graph
-                        );
-                        if (new_intention) {
-                            this.intention_queue.push(new_intention);
-                            this.intention_queue.shift();
-                            continue;
-                        }
-                        // control if the agent is carrying parcels and if the reward can be delivered in time
-                        if (
-                            this.beliefSet.me.carrying.size > 0 &&
-                            canDeliverContentInTime(
+                        case "patrolling": {
+                            // check if new parcels have spawned near the agent
+                            const new_intention = findAndPickUpNearParcels(
                                 this.beliefSet.me,
+                                this.beliefSet.parcels,
+                                this.beliefSet.config,
                                 this.beliefSet.map,
-                                this.beliefSet.graph,
-                                this.beliefSet.config
-                            )
-                        ) {
-                            if (DEBUG)
-                                console.log(
-                                    "Patrolling state entered while packages can be delivered, delivering them."
-                                );
-                            // go deliver
-                            let new_intention = new Intention(this, ["go_deliver"]);
-                            this.intention_queue.push(new_intention);
-                            this.intention_queue.shift();
-                            continue;
-                        } else {
-                            if (DEBUG)
-                                console.log("Patrolling state entered while packages carried but cannot be delivered");
-                            // drop parcels and keep patrolling
-                            // await client.putdown();
-                            // empty carrying
-                            // me.carrying.clear();
-                            // this.intention_queue.shift();
-                            // continue;
+                                this.beliefSet.graph
+                            );
+                            if (new_intention) {
+                                this.intention_queue.push(new_intention);
+                                this.intention_queue.shift();
+                                continue;
+                            }
+                            // control if the agent is carrying parcels and if the reward can be delivered in time
+                            if (
+                                this.beliefSet.me.carrying.size > 0 &&
+                                canDeliverContentInTime(
+                                    this.beliefSet.me,
+                                    this.beliefSet.map,
+                                    this.beliefSet.graph,
+                                    this.beliefSet.config
+                                )
+                            ) {
+                                if (DEBUG)
+                                    console.log(
+                                        "Patrolling state entered while packages can be delivered, delivering them."
+                                    );
+                                // go deliver
+                                let new_intention = new Intention(this, ["go_deliver"]);
+                                this.intention_queue.push(new_intention);
+                                this.intention_queue.shift();
+                                continue;
+                            } else {
+                                if (DEBUG)
+                                    console.log(
+                                        "Patrolling state entered while packages carried but cannot be delivered"
+                                    );
+                                // drop parcels and keep patrolling
+                                // await client.putdown();
+                                // empty carrying
+                                // me.carrying.clear();
+                                // this.intention_queue.shift();
+                                // continue;
+                            }
+                            break;
                         }
-                        break;
-                    }
-                    case "go_deliver": {
-                        // control if the agent is carrying parcels and if the reward can be delivered in time
-                        // if (!canDeliverContentInTime(me, config) && me.carrying.size > 0) {
-                        //     if (DEBUG) console.log("Cannot deliver carried packages anymore, dropping them.");
-                        //     // drop parcels and keep patrolling
-                        //     await client.putdown();
-                        //     // empty carrying
-                        //     me.carrying.clear();
-                        //     this.intention_queue.shift();
-                        //     continue;
-                        // }
-                        const new_intention = findAndPickUpNearParcels(
-                            this.beliefSet.me,
-                            this.beliefSet.parcels,
-                            this.beliefSet.config,
-                            this.beliefSet.map,
-                            this.beliefSet.graph
-                        );
-                        if (new_intention) {
-                            this.intention_queue.push(new_intention);
-                            this.intention_queue.shift();
-                            continue;
+                        case "go_deliver": {
+                            // control if the agent is carrying parcels and if the reward can be delivered in time
+                            // if (!canDeliverContentInTime(me, config) && me.carrying.size > 0) {
+                            //     if (DEBUG) console.log("Cannot deliver carried packages anymore, dropping them.");
+                            //     // drop parcels and keep patrolling
+                            //     await client.putdown();
+                            //     // empty carrying
+                            //     me.carrying.clear();
+                            //     this.intention_queue.shift();
+                            //     continue;
+                            // }
+                            const new_intention = findAndPickUpNearParcels(
+                                this.beliefSet.me,
+                                this.beliefSet.parcels,
+                                this.beliefSet.config,
+                                this.beliefSet.map,
+                                this.beliefSet.graph
+                            );
+                            if (new_intention) {
+                                this.intention_queue.push(new_intention);
+                                this.intention_queue.shift();
+                                continue;
+                            }
+                            break;
                         }
-                        break;
+                        default:
+                            break;
                     }
-                    default:
-                        break;
                 }
 
                 // Start achieving intention

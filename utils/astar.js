@@ -236,7 +236,7 @@ Graph.prototype.toString = function() {
   return graphString.join("\n");
 };
 
-function GridNode(x, y, weight) {
+export function GridNode(x, y, weight) {
   this.x = x;
   this.y = y;
   this.weight = weight;

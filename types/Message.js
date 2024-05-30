@@ -3,6 +3,15 @@ export const TopicMsgEnum = Object.freeze({
     HANDSHAKE_2: "handshake_2",
     NEW_PARCELS: "new_parcels",
     NEW_AGENTS: "new_agents",
+    ME: "me",
+    COLLAB: "collab",
+    NEW_INTENTION: "new_intention",
+    INTENTION_COMPLETED: "intention_completed",
+});
+
+export const CollabRoles = Object.freeze({
+    DELIVER: "deliver",
+    PICK_UP: "pick_up",
 });
 
 export default class Message {

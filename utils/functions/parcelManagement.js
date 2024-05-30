@@ -93,6 +93,7 @@ export function canDeliverContentInTime(me, map, graph, config) {
     //     return false;
 
     let deliveryTile = nearestDelivery(me, map, graph);
+    if (!deliveryTile) return false;
     let carriedReward = getCarriedRewardAndTreshold(me, config)[0];
 
     const start = graph.grid[Math.round(me.x)][Math.round(me.y)];
@@ -157,6 +158,7 @@ export function findBestParcel(me, parcels, config, map, graph) {
         if (option[0] == "go_pick_up") {
             let [go_pick_up, x, y, id] = option;
             let deliveryTile = nearestDelivery({ x, y }, map, graph);
+            if (!deliveryTile) return null;
 
             let parcelDistanceFromMe = distance({ x, y }, me, graph);
             let parcelDistanceFromDelivery = distance({ x, y }, deliveryTile, graph);

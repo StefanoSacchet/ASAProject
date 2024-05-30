@@ -14,6 +14,7 @@ import Say from "../plans/communicationPlans/Say.js";
  * @returns {Promise<void>}
  */
 export default async function onParcelsSensingCallback(perceived_parcels, beliefSet, myAgent) {
+    console.log(beliefSet.collabRole);
     // remove expired parcels, add new ones and update carriedBy
     const { isNewParcelSensed, isCarryingEmpty } = beliefSet.updateParcels(perceived_parcels);
 
@@ -25,9 +26,6 @@ export default async function onParcelsSensingCallback(perceived_parcels, belief
     // send new parcels sensed to allay
     const msg = new Message(TopicMsgEnum.NEW_PARCELS, beliefSet.COMMUNICATION_KEY, perceived_parcels);
     await new Say(beliefSet.allayId, msg).execute(beliefSet);
-
-    // if patrolling and new parcels are observed, clear intention
-    if (myAgent.intention_queue[0]?.predicate === "patrolling") myAgent.clear();
 
     const carriedArray = getCarriedRewardAndTreshold(beliefSet.me, beliefSet.config);
     const carriedReward = carriedArray[0];
@@ -48,6 +46,9 @@ export default async function onParcelsSensingCallback(perceived_parcels, belief
 
     // choose parcel based on reward and distance from me
     const bestOption = chooseBestOptionV2(options, beliefSet);
+
+    // if patrolling and new parcels are observed, clear intention
+    if (myAgent.intention_queue[0]?.predicate === "patrolling") myAgent.clear();
 
     // push best option
     if (bestOption) myAgent.push(bestOption);
