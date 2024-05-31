@@ -39,8 +39,7 @@ export default class IntentionRevision {
 
     idle = ["patrolling"];
 
-    /** @param {boolean} started */
-    async loop(started) {
+    async loop() {
         while (true) {
             // Consumes intention_queue if not empty
             if (this.intention_queue.length > 0) {
@@ -63,7 +62,7 @@ export default class IntentionRevision {
                     console.log("=========================================================");
                 }
 
-                if (this.beliefSet.collabRole !== CollabRoles.DELIVER) {
+                if (this.beliefSet.collabRole !== CollabRoles.DELIVER || this.beliefSet.isSingleCorridor) {
                     switch (intention.predicate[0]) {
                         case "go_pick_up": {
                             let id = intention.predicate[3];

@@ -100,11 +100,16 @@ export default class Agent {
     async loop() {
         while (true) {
             if (
-                this.#beliefSet.pathWithCorridors?.length > 0 &&
+                // this.#beliefSet.pathWithCorridors?.length > 0 &&
                 this.#beliefSet.graph &&
                 this.#beliefSet.me.id &&
                 this.#beliefSet.allayInfo
             ) {
+                if (this.#beliefSet.pathWithCorridors.length < 3) {
+                    console.log("No path with corridors");
+                    break;
+                }
+
                 // if the two agents can not reach each other don't collaborate
                 let start =
                     this.#beliefSet.graph.grid[Math.round(this.#beliefSet.me.x)][Math.round(this.#beliefSet.me.y)];
@@ -114,6 +119,17 @@ export default class Agent {
                     ];
                 const path = astar.search(this.#beliefSet.graph, start, end);
                 if (path.length === 0) break;
+
+                // if there are a lot of reachable delivery tiles, don't collaborate
+                let tmp = [];
+                for (const delivery of this.#beliefSet.map.deliveryTiles.values()) {
+                    start =
+                        this.#beliefSet.graph.grid[Math.round(this.#beliefSet.me.x)][Math.round(this.#beliefSet.me.y)];
+                    end = this.#beliefSet.graph.grid[delivery.x][delivery.y];
+                    const path = astar.search(this.#beliefSet.graph, start, end);
+                    if (path.length > 0) tmp.push(delivery);
+                }
+                if (tmp.length > 3) break;
 
                 // calculate the agent closer to the delivery
                 const myTile = nearestDelivery(this.#beliefSet.me, this.#beliefSet.map, this.#beliefSet.graph);
@@ -137,9 +153,20 @@ export default class Agent {
 
                 const myId = this.#apiClient.id;
                 const allayId = this.#beliefSet.allayId;
-                if (myDistance === allayDistance) {
-                    if (myId.localeCompare(allayId) > 0) allayDistance += 1;
-                    else myDistance += 1;
+                if (myDistance === allayDistance || (myDistance === Infinity && allayDistance === Infinity)) {
+                    if (myId.localeCompare(allayId) > 0) {
+                        allayDistance = 2;
+                        myDistance = 1;
+                    } else {
+                        myDistance = 2;
+                        allayDistance = 1;
+                    }
+                } else if (
+                    (myDistance === Infinity && allayDistance !== Infinity) ||
+                    (myDistance !== Infinity && allayDistance === Infinity)
+                ) {
+                    this.#beliefSet.isSingleCorridor = true;
+                    console.log("Single corridor");
                 }
 
                 if (myDistance < allayDistance) this.#beliefSet.collabRole = CollabRoles.DELIVER;
@@ -188,6 +215,6 @@ export default class Agent {
         this.#beliefSet.client = this.#apiClient;
 
         this.loop();
-        this.#myAgent.loop(this.#started);
+        this.#myAgent.loop();
     }
 }

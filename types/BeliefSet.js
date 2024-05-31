@@ -41,6 +41,9 @@ export default class BeliefSet {
     /** @type {Array<Array<GridNode>>} */
     pathWithCorridors;
 
+    /** @type {boolean} */
+    isSingleCorridor;
+
     /** @type {Array<Array<number>>} */
     matrix;
     /** @type {Graph} */

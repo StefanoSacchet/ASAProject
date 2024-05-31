@@ -17,7 +17,8 @@ const directions = [
  */
 function pathsSpawnersToDeliveries(beliefSet) {
     const pathWithCorridors = [];
-    let tmp = false;
+    let tmp = 0;
+    let isSingleCorridor = false;
     for (const spawner of beliefSet.map.spawnerTiles.values()) {
         for (const delivery of beliefSet.map.deliveryTiles.values()) {
             const start = beliefSet.graph.grid[spawner.x][spawner.y];
@@ -25,25 +26,31 @@ function pathsSpawnersToDeliveries(beliefSet) {
             const path = astar.search(beliefSet.graph, start, end);
             if (path.length > 0) {
                 // if path found then identify corridors
+                let nodeCounter = 0;
                 for (const node of path) {
+                    let dirCounter = 0;
                     for (const [dx, dy] of directions) {
                         const nx = node.x + dx;
                         const ny = node.y + dy;
                         if (nx < 0 || nx >= beliefSet.map.width || ny < 0 || ny >= beliefSet.map.height) continue;
                         const neighbor = beliefSet.graph.grid[nx][ny];
                         if (neighbor.weight === 0) {
+                            dirCounter++;
                             neighbor.corridor = true;
                             tmp = true;
-                            // console.log("Corridor found at", nx, ny);
                         }
                     }
+                    if (dirCounter >= 2) {
+                        nodeCounter++;
+                    }
                 }
+                if (nodeCounter === path.length) isSingleCorridor = true;
                 if (tmp) pathWithCorridors.push(path);
             }
         }
     }
 
-    return pathWithCorridors;
+    return { pathWithCorridors, isSingleCorridor };
 }
 /**
  * @param {number} width
@@ -74,6 +81,8 @@ export default async function onMapCallback(width, height, tiles, beliefSet) {
     });
     beliefSet.graph = new Graph(beliefSet.matrix);
 
-    const pathWithCorridors = pathsSpawnersToDeliveries(beliefSet);
+    const { pathWithCorridors, isSingleCorridor } = pathsSpawnersToDeliveries(beliefSet);
     beliefSet.pathWithCorridors = pathWithCorridors;
+    beliefSet.isSingleCorridor = isSingleCorridor;
+    console.log("isSingleCorridor", isSingleCorridor);
 }

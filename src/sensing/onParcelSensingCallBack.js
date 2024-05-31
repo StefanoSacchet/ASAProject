@@ -18,13 +18,19 @@ export default async function onParcelsSensingCallback(perceived_parcels, belief
     const { isNewParcelSensed, isCarryingEmpty } = beliefSet.updateParcels(perceived_parcels);
 
     // clear intention if carrying is empty
-    if (isCarryingEmpty) myAgent.clear();
+    if (isCarryingEmpty && !beliefSet.isSingleCorridor) myAgent.clear();
 
     const carriedArray = getCarriedRewardAndTreshold(beliefSet.me, beliefSet.config);
     const carriedReward = carriedArray[0];
     const THRESHOLD = carriedArray[1];
     // go deliver
     if (carriedReward > THRESHOLD && THRESHOLD !== 0) {
+        myAgent.push(["go_deliver"]);
+        return;
+    }
+
+    if (beliefSet.collabRole === CollabRoles.PICK_UP && beliefSet.isSingleCorridor && !isCarryingEmpty) {
+        myAgent.clear();
         myAgent.push(["go_deliver"]);
         return;
     }
