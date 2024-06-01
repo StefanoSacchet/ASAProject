@@ -3,6 +3,7 @@ import { astar } from "../../utils/astar.js";
 import { GridNode } from "../../utils/astar.js";
 import Tile from "../../types/Tile.js";
 import BeliefSet from "../../types/BeliefSet.js";
+import { distance } from "../../utils/functions/distance.js";
 
 const directions = [
     [0, 1],

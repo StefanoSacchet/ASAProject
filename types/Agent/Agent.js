@@ -17,8 +17,8 @@ import Message from "../Message.js";
 import Shout from "../../src/plans/communicationPlans/Shout.js";
 import Config from "../Config.js";
 import { nearestDelivery } from "../../utils/functions/distance.js";
-import { astar } from "../../utils/astar.js";
 import { CollabRoles } from "../Message.js";
+import { distance } from "../../utils/functions/distance.js";
 
 export default class Agent {
     /** @type {DeliverooApi} */
@@ -68,7 +68,7 @@ export default class Agent {
         communicationKey = ""
     ) {
         if (token === undefined) token = config.token;
-        this.#apiClient = new DeliverooApi(config.host, '');
+        this.#apiClient = new DeliverooApi(config.host, "");
         this.#beliefSet = new BeliefSet();
         this.#beliefSet.HANDSHAKE_KEY = handShakeKey;
         this.#beliefSet.COMMUNICATION_KEY = communicationKey;
@@ -99,43 +99,41 @@ export default class Agent {
 
     async loop() {
         while (true) {
-            if (
-                // this.#beliefSet.pathWithCorridors?.length > 0 &&
-                this.#beliefSet.graph &&
-                this.#beliefSet.me.id &&
-                this.#beliefSet.allayInfo
-            ) {
+            if (this.#beliefSet.graph && this.#beliefSet.me.id && this.#beliefSet.allayInfo) {
                 if (this.#beliefSet.pathWithCorridors.length < 3) {
                     console.log("No path with corridors");
                     break;
                 }
 
                 // if the two agents can not reach each other don't collaborate
-                let start =
-                    this.#beliefSet.graph.grid[Math.round(this.#beliefSet.me.x)][Math.round(this.#beliefSet.me.y)];
-                let end =
-                    this.#beliefSet.graph.grid[Math.round(this.#beliefSet.allayInfo.x)][
-                        Math.round(this.#beliefSet.allayInfo.y)
-                    ];
-                const path = astar.search(this.#beliefSet.graph, start, end);
-                if (path.length === 0) break;
+                let dis = distance(this.#beliefSet.me, this.#beliefSet.allayInfo, this.#beliefSet.graph);
+                if (dis === 0) break;
 
                 // if there are a lot of reachable delivery tiles, don't collaborate
                 let tmp = [];
                 for (const delivery of this.#beliefSet.map.deliveryTiles.values()) {
-                    start =
-                        this.#beliefSet.graph.grid[Math.round(this.#beliefSet.me.x)][Math.round(this.#beliefSet.me.y)];
-                    end = this.#beliefSet.graph.grid[delivery.x][delivery.y];
-                    const path = astar.search(this.#beliefSet.graph, start, end);
-                    if (path.length > 0) tmp.push(delivery);
+                    dis = distance(this.#beliefSet.me, delivery, this.#beliefSet.graph);
+                    if (dis > 0) tmp.push(delivery);
                 }
                 if (tmp.length > 3) break;
 
+                // loop for every delivery tile and check if they are colse to each other
+                let nearTiles = [];
+                for (let i = 0; i < tmp.length - 1; i++) {
+                    const delivery1 = tmp[i];
+                    const delivery2 = tmp[i + 1];
+                    dis = distance(delivery1, delivery2, this.#beliefSet.graph);
+                    if (dis === 0) dis = Infinity;
+                    if (dis < 3) {
+                        nearTiles.push(delivery1);
+                    }
+                }
+                // if all the delivery tiles are close to each other don't collaborate
+                if (nearTiles.length === tmp.length - 1) break;
+
                 // calculate the agent closer to the delivery
                 const myTile = nearestDelivery(this.#beliefSet.me, this.#beliefSet.map, this.#beliefSet.graph);
-                start = this.#beliefSet.graph.grid[Math.round(this.#beliefSet.me.x)][Math.round(this.#beliefSet.me.y)];
-                end = this.#beliefSet.graph.grid[myTile.x][myTile.y];
-                let myDistance = astar.search(this.#beliefSet.graph, start, end).length;
+                let myDistance = distance(this.#beliefSet.me, myTile, this.#beliefSet.graph);
                 if (myDistance === 0) myDistance = Infinity;
 
                 const allayTile = nearestDelivery(
@@ -143,14 +141,10 @@ export default class Agent {
                     this.#beliefSet.map,
                     this.#beliefSet.graph
                 );
-                start =
-                    this.#beliefSet.graph.grid[Math.round(this.#beliefSet.allayInfo.x)][
-                        Math.round(this.#beliefSet.allayInfo.y)
-                    ];
-                end = this.#beliefSet.graph.grid[allayTile.x][allayTile.y];
-                let allayDistance = astar.search(this.#beliefSet.graph, start, end).length;
-                if (allayDistance.length === 0) allayDistance = Infinity;
+                let allayDistance = distance(this.#beliefSet.allayInfo, allayTile, this.#beliefSet.graph);
+                if (allayDistance === 0) allayDistance = Infinity;
 
+                // if the two agents are at the same distance from the delivery, the one with the smallest id is the deliverer
                 const myId = this.#apiClient.id;
                 const allayId = this.#beliefSet.allayId;
                 if (myDistance === allayDistance || (myDistance === Infinity && allayDistance === Infinity)) {
@@ -161,17 +155,11 @@ export default class Agent {
                         myDistance = 2;
                         allayDistance = 1;
                     }
-                } else if (
-                    (myDistance === Infinity && allayDistance !== Infinity) ||
-                    (myDistance !== Infinity && allayDistance === Infinity)
-                ) {
-                    this.#beliefSet.isSingleCorridor = true;
-                    console.log("Single corridor");
                 }
 
+                // decide the role of the two agents
                 if (myDistance < allayDistance) this.#beliefSet.collabRole = CollabRoles.DELIVER;
                 else this.#beliefSet.collabRole = CollabRoles.PICK_UP;
-
                 console.log("Collaboration role:", this.#beliefSet.collabRole);
 
                 break;
