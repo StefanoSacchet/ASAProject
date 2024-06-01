@@ -1,4 +1,5 @@
 import { DEBUG } from "../../config.js";
+import { nearestDelivery } from "../../utils/functions/distance.js";
 import { canDeliverContentInTime, findAndPickUpNearParcels } from "../../utils/functions/parcelManagement.js";
 import Intention from "./Intention.js";
 import Plan from "../plans/Plan.js";

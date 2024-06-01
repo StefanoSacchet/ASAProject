@@ -79,7 +79,7 @@ export default class Agent {
             // this.#beliefSet.client.shout("Hello, I am here!");
         });
         this.#apiClient.onMap((width, height, tiles) => {
-            this.#onMapCallback(width, height, tiles, this.#beliefSet);
+            this.#onMapCallback(width, height, tiles, this.#beliefSet, this.#planner);
         });
         this.#apiClient.onYou(({ id, name, x, y, score }) => {
             this.#onYouCallback(id, name, x, y, score, this.#beliefSet);

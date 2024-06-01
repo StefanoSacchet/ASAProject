@@ -62,15 +62,31 @@ export default class Intention {
         if (this.#started) return this;
         else this.#started = true;
 
-        console.log("AAAAAAAa", this.predicate[0]);
-        console.log(planner);
-
         if (this.predicate[0] == "go_to" && this.#parent) planner = this.#parent.planner; 
 
-        // TODO: avoid using pddl when collaborative action is started
-        if (planner && planner.pddl && this.predicate[0] == "go_to") {
-            console.log("Using pddl");
-            while(1);
+        if (planner && planner.pddl &&  planner.is_supported_intention(this.predicate[0])) {
+            if (this.stopped) throw ["stopped intention", ...this.predicate];
+            this.#current_plan = new Plan();
+            
+            planner.current_plan = this.#current_plan;
+
+            try {
+                const plan_res = await planner.execute(beliefSet, this.predicate);
+                this.log(
+                    "succesful intention",
+                    ...this.predicate,
+                    "through with pddl, result:",
+                    plan_res
+                );
+                return plan_res;
+            } catch (error) {
+                this.log(
+                    "failed intention",
+                    ...this.predicate,
+                    "through with pddl, with error:",
+                    ...error
+                );
+            }
         }
         else {
             // Trying all plans in the library
