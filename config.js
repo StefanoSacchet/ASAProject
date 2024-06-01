@@ -1,8 +1,10 @@
 import { computeDigest } from "./utils/functions/crypto.js";
 
+const name = "agent" + process.argv[2];
+
 // ste4
 const config = {
-    host: "http://localhost:8080", // https://deliveroojs.onrender.com"
+    host: "http://localhost:8080/?name=" + name, // https://deliveroojs.onrender.com"
     token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjIxYzcyYjlhN2JkIiwibmFtZSI6InN0ZTQiLCJpYXQiOjE3MTYzOTU0NjJ9.XycBKqifC-Ce7rHkFWfWM61A8R6ySeLdBMj4mqEzYwI",
 };
 

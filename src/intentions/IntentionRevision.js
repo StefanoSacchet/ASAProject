@@ -62,7 +62,7 @@ export default class IntentionRevision {
                     console.log("=========================================================");
                 }
 
-                if (this.beliefSet.collabRole !== CollabRoles.DELIVER || this.beliefSet.isSingleCorridor) {
+                if (this.beliefSet.collabRole !== CollabRoles.DELIVER) {
                     switch (intention.predicate[0]) {
                         case "go_pick_up": {
                             let id = intention.predicate[3];

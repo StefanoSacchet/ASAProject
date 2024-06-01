@@ -68,7 +68,7 @@ export default class Agent {
         communicationKey = ""
     ) {
         if (token === undefined) token = config.token;
-        this.#apiClient = new DeliverooApi(config.host, token);
+        this.#apiClient = new DeliverooApi(config.host, '');
         this.#beliefSet = new BeliefSet();
         this.#beliefSet.HANDSHAKE_KEY = handShakeKey;
         this.#beliefSet.COMMUNICATION_KEY = communicationKey;

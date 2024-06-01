@@ -58,12 +58,17 @@ export default class GoDeliver extends Plan {
             deliveryTile = this.findDeliveryTileBeforeCorridor(path); // delivery tile just before the corridor
             if (!deliveryTile) deliveryTile = path[Math.round(path.length / 2) - 1]; // middle of the path
 
-            if (this.beliefSet.isSingleCorridor){
+            if (this.beliefSet.isSingleCorridor) {
                 deliveryTile = path[Math.round(path.length / 2) - 1]; // middle of the path
             }
 
             // tell the other agent to go pick up the parcel
-            const intention = ["go_pick_up", deliveryTile.x, deliveryTile.y, this.beliefSet.me.carrying.values().next().value.id];
+            const intention = [
+                "go_pick_up",
+                deliveryTile.x,
+                deliveryTile.y,
+                this.beliefSet.me.carrying.values().next().value.id,
+            ];
             const msg = new Message(TopicMsgEnum.NEW_INTENTION, this.beliefSet.COMMUNICATION_KEY, intention);
             new Say(this.beliefSet.allayId, msg).execute(this.beliefSet);
         }
@@ -76,6 +81,10 @@ export default class GoDeliver extends Plan {
 
         // empty carrying
         this.beliefSet.me.carrying.clear();
+
+        if (this.beliefSet.collabRole === CollabRoles.PICK_UP && this.beliefSet.isSingleCorridor) {
+            await this.subIntention(["patrolling"]);
+        }
 
         // await this.subIntention(["patrolling"]);
 

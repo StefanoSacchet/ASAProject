@@ -12,7 +12,7 @@ export default class Patrolling extends Plan {
 
     static #lastDeliveryIndex = -1;
 
-    static tmp = true;
+    static tmp = false;
 
     /**
      * @param {BeliefSet} beliefSet
@@ -133,18 +133,20 @@ export default class Patrolling extends Plan {
 
         // if (!randomTile) randomTile = this.getRandomTile();
 
+        // if the agent is a deliverer then move to delivery tiles
         if (this.beliefSet.collabRole === CollabRoles.DELIVER) {
             if (DEBUG) console.log("Collaboration role is DELIVER, moving to nearest delivery tile");
             Patrolling.#lastDeliveryIndex = (Patrolling.#lastDeliveryIndex + 1) % this.beliefSet.map.deliveryTiles.size;
             randomTile = Array.from(this.beliefSet.map.deliveryTiles.values())[Patrolling.#lastDeliveryIndex];
 
+            // if the agent is a deliverer and is a single corridor then move to the middle of the path
             if (this.beliefSet.isSingleCorridor) {
                 if (Patrolling.tmp) {
-                    let x = Math.round(this.beliefSet.me.x);
-                    let y = Math.round(this.beliefSet.me.y);
+                    let x = this.beliefSet.me.x;
+                    let y = this.beliefSet.me.y;
                     const start = this.beliefSet.graph.grid[x][y];
-                    x = Math.round(this.beliefSet.allayInfo.x);
-                    y = Math.round(this.beliefSet.allayInfo.y);
+                    x = this.beliefSet.allayInfo.x;
+                    y = this.beliefSet.allayInfo.y;
                     const end = this.beliefSet.graph.grid[x][y];
                     /** @type {Array<GridNode>} */
                     const path = astar.search(this.beliefSet.graph, start, end);
@@ -157,7 +159,7 @@ export default class Patrolling extends Plan {
             }
         }
 
-        if (this.beliefSet.collabRole === CollabRoles.PICK_UP && this.beliefSet.isSingleCorridor) {
+        if (this.beliefSet.collabRole !== CollabRoles.DELIVER && this.beliefSet.isSingleCorridor && Patrolling.tmp) {
             // go to a tile near spawner tile
             const directions = [
                 [0, 1],
@@ -166,8 +168,8 @@ export default class Patrolling extends Plan {
                 [-1, 0],
             ];
             for (const [dx, dy] of directions) {
-                const nx = randomTile.x + dx;
-                const ny = randomTile.y + dy;
+                const nx = this.beliefSet.me.x + dx;
+                const ny = this.beliefSet.me.y + dy;
                 if (nx < 0 || nx >= this.beliefSet.map.width || ny < 0 || ny >= this.beliefSet.map.height) continue;
                 const neighbor = this.beliefSet.graph.grid[nx][ny];
                 if (neighbor.weight === 1) {
@@ -175,6 +177,13 @@ export default class Patrolling extends Plan {
                     break;
                 }
             }
+            Patrolling.tmp = false;
+        } else if (
+            this.beliefSet.collabRole !== CollabRoles.DELIVER &&
+            this.beliefSet.isSingleCorridor &&
+            !Patrolling.tmp
+        ) {
+            Patrolling.tmp = true;
         }
 
         await this.subIntention(["go_to", randomTile.x, randomTile.y]);
