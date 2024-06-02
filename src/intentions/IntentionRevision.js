@@ -156,6 +156,27 @@ export default class IntentionRevision {
                     }
                 }
 
+                if (intention.predicate[0] === "go_pick_up") {
+                    // if parcel is being piecked up by other agent, remove intention
+                    if (this.beliefSet.allayParcelsMap.has(intention.predicate[3])) {
+                        if (DEBUG)
+                            console.log(
+                                "Parcel is already picked up by another agent. Predicate:",
+                                intention.predicate
+                            );
+                        this.intention_queue.shift();
+                        continue;
+                    }
+
+                    // say to allay that parcel is being picked up
+                    const msg = new Message(
+                        TopicMsgEnum.PICK_UP_PARCEL,
+                        this.beliefSet.COMMUNICATION_KEY,
+                        intention.predicate
+                    );
+                    new Say(this.beliefSet.allayId, msg).execute(this.beliefSet);
+                }
+
                 // Start achieving intention
                 await intention
                     .achieve(this.planLibrary, this.beliefSet)

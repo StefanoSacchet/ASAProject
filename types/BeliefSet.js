@@ -33,6 +33,12 @@ export default class BeliefSet {
     allayInfo;
 
     /**
+     * Holds parcels that allay is going to pick up 
+     * @type {Map<string, Parcel>}
+     */
+    allayParcelsMap = new Map();
+
+    /**
      * deliver | pick_up
      * @type {string}
      */

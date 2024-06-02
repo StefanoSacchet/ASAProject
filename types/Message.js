@@ -7,6 +7,8 @@ export const TopicMsgEnum = Object.freeze({
     COLLAB: "collab",
     NEW_INTENTION: "new_intention",
     INTENTION_COMPLETED: "intention_completed",
+    PICK_UP_PARCEL: "pick_up_parcel",
+    PARCEL_PICKED_UP: "parcel_picked_up",
 });
 
 export const CollabRoles = Object.freeze({

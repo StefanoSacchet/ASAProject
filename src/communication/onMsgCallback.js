@@ -68,5 +68,17 @@ export default async function onMsgCallback(id, name, msg, reply, beliefSet, myA
             new Message(TopicMsgEnum.NEW_INTENTION, beliefSet.COMMUNICATION_KEY, ["go_deliver"]);
             await new Say(beliefSet.allayId, msg).execute(beliefSet);
             break;
+
+        case TopicMsgEnum.PICK_UP_PARCEL: // pick up parcel message
+            if (DEBUG) console.log("Pick up parcel message");
+            // msg.content: ["go_pick_up", x, y, id]
+            beliefSet.allayParcelsMap.set(msg.content[3], beliefSet.parcels.get(msg.content[3]));
+            break;
+
+        case TopicMsgEnum.PARCEL_PICKED_UP: // parcel picked up message
+            if (DEBUG) console.log("Parcel picked up message");
+            // msg.content: id
+            beliefSet.allayParcelsMap.delete(msg.content);
+            break;
     }
 }

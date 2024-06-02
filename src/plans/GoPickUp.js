@@ -42,6 +42,11 @@ export default class GoPickUp extends Plan {
             //     myAgent.push(["go_deliver"]);
             //     return;
             // }
+
+            // tell allay that parcel is picked up
+            const msg = new Message(TopicMsgEnum.PARCEL_PICKED_UP, this.beliefSet.COMMUNICATION_KEY, id);
+            new Say(this.beliefSet.allayId, msg).execute(this.beliefSet);
+
             return true;
         } else if (DEBUG) {
             console.log("pickup failed");
