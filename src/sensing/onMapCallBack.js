@@ -64,7 +64,7 @@ function pathsSpawnersToDeliveries(beliefSet) {
 */
 function update_planner_map_info(planner, tiles) {
     tiles.forEach(function(tile, tile_id) {
-        planner.objects_init_pddlstring += "tile_" + tile_id.toString() + ", ";
+        planner.objects_init_pddlstring += "tile_" + tile_id.toString() + " - Tile ";
 
         let near_tiles_pddl = "";
         let near_tiles_positions = ["left_of ", "right_of ", "down_of ", "up_of "];
@@ -74,13 +74,13 @@ function update_planner_map_info(planner, tiles) {
                 let near_tile_index = getByValue(tiles, near_tile);
                 if (near_tile_index != -1) {
                     //                  (               left_of                         2                ,       1        )
-                    near_tiles_pddl += "(" + near_tiles_positions[near_tile_number] + "tile_" + near_tile_index + ", " + "tile_" + tile_id + ") ";
+                    near_tiles_pddl += "(" + near_tiles_positions[near_tile_number] + "tile_" + near_tile_index + " " + "tile_" + tile_id + ") ";
                 }
             })
 
         planner.map_init_pddlstring += near_tiles_pddl;
     });
-    planner.objects_init_pddlstring += "parcel";
+    planner.objects_init_pddlstring += "parcel - Parcel";
 
     planner.map_init_pddlstring_backup = planner.map_init_pddlstring;
     planner.objects_init_pddlstring_backup = planner.objects_init_pddlstring;
