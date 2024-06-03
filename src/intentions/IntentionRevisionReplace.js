@@ -21,7 +21,6 @@ export default class IntentionRevisionReplace extends IntentionRevision {
             return; // intention is already being achieved
         }
 
-        if (DEBUG) console.log("IntentionRevisionReplace.push", predicate);
         const intention = new Intention(this, predicate);
         this.intention_queue.push(intention);
 
@@ -41,16 +40,17 @@ export default class IntentionRevisionReplace extends IntentionRevision {
                 this.intention_queue.push(new_intention);
             }
         }
+
         // Force current intention stop
         if (last) {
             last.stop();
         }
     }
 
-    async clear() {
-        this.intention_queue.forEach((i) => i.stop());
-        this.intention_queue = [];
-    }
+    // async clear() {
+    //     this.intention_queue.forEach((i) => i.stop());
+    //     this.intention_queue = [];
+    // }
 }
 
 //* Other possible implementations

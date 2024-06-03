@@ -12,7 +12,10 @@ import GameMap from "../../types/GameMap.js";
 export function distance({ x: x1, y: y1 }, { x: x2, y: y2 }, graph) {
     const start = graph.grid[Math.round(x1)][Math.round(y1)];
     const end = graph.grid[Math.round(x2)][Math.round(y2)];
-    return astar.search(graph, start, end).length; // A* search
+    const res = astar.search(graph, start, end); // A* search
+    if (res.length == 0) return Infinity;
+    return res.length;
+    // return astar.search(graph, start, end).length; // A* search
 }
 
 /**

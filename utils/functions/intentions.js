@@ -36,6 +36,7 @@ import BeliefSet from "../../types/BeliefSet.js";
  * @returns {string|number|undefined} The best option from the list
  */
 export function chooseBestOptionV2(options, beliefSet) {
+    if (options.length === 0) return undefined;
     // set a score for each option based on its reward and distance from me
     const PENALTY_DISTANCE = 2;
     let best_option;

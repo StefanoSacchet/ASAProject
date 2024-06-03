@@ -14,33 +14,51 @@ import GameMap from "../../types/GameMap.js";
  * Update parcels in beliefSet
  * @param {Array<Parcel>} perceived_parcels
  * @param {BeliefSet} beliefSet
- * @returns {boolean}
+ * @returns {boolean, boolean} isNewParcelSensed, isCarryingEmpty
  */
 export function updateParcels(perceived_parcels, beliefSet) {
-    for (const [id, parcel] of beliefSet.parcels.entries()) {
-        if (!perceived_parcels.find((p) => p.id === id)) {
-            beliefSet.parcels.delete(id);
-            if (beliefSet.me.carrying.has(id)) {
-                beliefSet.me.carrying.delete(id);
-                if (beliefSet.me.carrying.size === 0) return true;
-            }
-        } else {
-            // update carriedBy
-            if (parcel.carriedBy && parcel.carriedBy === beliefSet.me.id) {
-                parcel.carriedBy = beliefSet.me.id;
-            }
-            // update me.carrying
-            if (beliefSet.me.carrying.has(id)) {
-                beliefSet.me.carrying.set(id, parcel);
-                parcel.carriedBy = beliefSet.me.id;
-            }
-            // update me.carrying if found in parcels but not in me.carrying
-            if (parcel.carriedBy && parcel.carriedBy === beliefSet.me.id) {
-                beliefSet.me.carrying.set(id, parcel);
-            }
-        }
-    }
-    return false;
+    // let isNewParcelSensed = false;
+    // let isCarryingEmpty = false;
+
+    // for (const p of perceived_parcels) {
+    //     if (!beliefSet.parcels.has(p.id)) isNewParcelSensed = true; // new parcel sensed
+    //     else beliefSet.parcels.get(p.id).probability = 1;
+    //     p.probability = 1;
+    //     beliefSet.parcels.set(p.id, p); // update perceived parcels
+    // }
+
+    // for (let parcel of beliefSet.parcels.values()) {
+    //     if (!perceived_parcels.find((p) => p.id === parcel.id)) {
+    //         // remove expired parcels
+    //         // beliefSet.parcels.delete(parcel.id);
+    //         parcel.probability -= beliefSet.config.PARCEL_PROB_DECAY;
+    //         if (beliefSet.me.carrying.has(parcel.id)) {
+    //             beliefSet.me.carrying.delete(parcel.id);
+    //             if (beliefSet.me.carrying.size === 0) isCarryingEmpty = true;
+    //         }
+    //     } else {
+    //         // update carriedBy
+    //         if (parcel.carriedBy && parcel.carriedBy === beliefSet.me.id) {
+    //             parcel.carriedBy = beliefSet.me.id;
+    //         }
+    //         // update me.carrying
+    //         if (beliefSet.me.carrying.has(parcel.id)) {
+    //             beliefSet.me.carrying.set(parcel.id, parcel);
+    //             parcel.carriedBy = beliefSet.me.id;
+    //         }
+    //         // update me.carrying if found in parcels but not in me.carrying
+    //         if (parcel.carriedBy && parcel.carriedBy === beliefSet.me.id) {
+    //             beliefSet.me.carrying.set(parcel.id, parcel);
+    //         }
+    //     }
+
+    //     if (parcel.probability < beliefSet.config.PARCEL_PROB_TRHESHOLD) {
+    //         if (DEBUG) console.log("Parcel probability is below threshold, deleting parcel");
+    //         beliefSet.parcels.delete(parcel.id);
+    //     }
+    // }
+
+    // return isNewParcelSensed, isCarryingEmpty;
 }
 
 /**
@@ -75,6 +93,7 @@ export function canDeliverContentInTime(me, map, graph, config) {
     //     return false;
 
     let deliveryTile = nearestDelivery(me, map, graph);
+    if (!deliveryTile) return false;
     let carriedReward = getCarriedRewardAndTreshold(me, config)[0];
 
     const start = graph.grid[Math.round(me.x)][Math.round(me.y)];
@@ -139,6 +158,7 @@ export function findBestParcel(me, parcels, config, map, graph) {
         if (option[0] == "go_pick_up") {
             let [go_pick_up, x, y, id] = option;
             let deliveryTile = nearestDelivery({ x, y }, map, graph);
+            if (!deliveryTile) return null;
 
             let parcelDistanceFromMe = distance({ x, y }, me, graph);
             let parcelDistanceFromDelivery = distance({ x, y }, deliveryTile, graph);

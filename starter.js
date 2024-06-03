@@ -2,16 +2,24 @@ import { spawn } from "child_process";
 
 // Function to spawn child processes
 function spawnProcesses() {
-    const agentSlave = spawn("npm run agentSlave", { shell: true });
-    const agentMaster = spawn("npm run agentMaster", { shell: true });
+    const agentSlave = spawn("npm run agentSlave " + 2, { shell: true });
+    const agentMaster = spawn("npm run agentMaster " + 1, { shell: true });
 
-    // childProcess.stdout.on('data', data => {
-    //     console.log(`Output from ${i}: ${data}`);
-    // });
+    agentSlave.stdout.on('data', data => {
+        console.log(`Output from agentSlave: ${data}`);
+    });
 
-    // childProcess.stderr.on('data', data => {
-    //     console.error(`Error from ${i}: ${data}`);
-    // });
+    agentMaster.stdout.on('data', data => {
+        console.log(`Output from agentMaster: ${data}`);
+    });
+
+    agentSlave.stderr.on('data', data => {
+        console.log(`Stderr from agentSlave: ${data}`);
+    });
+
+    agentMaster.stderr.on('data', data => {
+        console.log(`Stderr from agentMaster: ${data}`);
+    });
 
     // childProcess.on('close', code => {
     //     console.log(`Child process ${i} exited with code ${code}`);

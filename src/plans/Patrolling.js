@@ -1,12 +1,18 @@
 import { DEBUG } from "../../config.js";
-import { distance } from "../../utils/functions/distance.js";
+import { distance, nearestDelivery } from "../../utils/functions/distance.js";
 import Plan from "./Plan.js";
 import BeliefSet from "../../types/BeliefSet.js";
 import Tile from "../../types/Tile.js";
+import { CollabRoles } from "../../types/Message.js";
+import { astar } from "../../utils/astar.js";
 
 export default class Patrolling extends Plan {
     // Initialize last selected spawner index
     static #lastSpawnerIndex = -1;
+
+    static #lastDeliveryIndex = -1;
+
+    static tmp = false;
 
     /**
      * @param {BeliefSet} beliefSet
@@ -125,7 +131,61 @@ export default class Patrolling extends Plan {
             randomTile = this.getRandomTile();
         }
 
-        if (!randomTile) randomTile = this.getRandomTile();
+        // if (!randomTile) randomTile = this.getRandomTile();
+
+        // if the agent is a deliverer then move to delivery tiles
+        if (this.beliefSet.collabRole === CollabRoles.DELIVER) {
+            if (DEBUG) console.log("Collaboration role is DELIVER, moving to nearest delivery tile");
+            Patrolling.#lastDeliveryIndex = (Patrolling.#lastDeliveryIndex + 1) % this.beliefSet.map.deliveryTiles.size;
+            randomTile = Array.from(this.beliefSet.map.deliveryTiles.values())[Patrolling.#lastDeliveryIndex];
+
+            // if the agent is a deliverer and is a single corridor then move to the middle of the path
+            if (this.beliefSet.isSingleCorridor) {
+                if (Patrolling.tmp) {
+                    let x = this.beliefSet.me.x;
+                    let y = this.beliefSet.me.y;
+                    const start = this.beliefSet.graph.grid[x][y];
+                    x = this.beliefSet.allayInfo.x;
+                    y = this.beliefSet.allayInfo.y;
+                    const end = this.beliefSet.graph.grid[x][y];
+                    /** @type {Array<GridNode>} */
+                    const path = astar.search(this.beliefSet.graph, start, end);
+                    randomTile = path[Math.round(path.length / 2) - 1];
+                    Patrolling.tmp = false;
+                } else {
+                    randomTile = nearestDelivery(this.beliefSet.me, this.beliefSet.map, this.beliefSet.graph);
+                    Patrolling.tmp = true;
+                }
+            }
+        }
+
+        if (this.beliefSet.collabRole !== CollabRoles.DELIVER && this.beliefSet.isSingleCorridor && Patrolling.tmp) {
+            // go to a tile near spawner tile
+            const directions = [
+                [0, 1],
+                [1, 0],
+                [0, -1],
+                [-1, 0],
+            ];
+            for (const [dx, dy] of directions) {
+                const nx = this.beliefSet.me.x + dx;
+                const ny = this.beliefSet.me.y + dy;
+                if (nx < 0 || nx >= this.beliefSet.map.width || ny < 0 || ny >= this.beliefSet.map.height) continue;
+                const neighbor = this.beliefSet.graph.grid[nx][ny];
+                if (neighbor.weight === 1) {
+                    randomTile = neighbor;
+                    break;
+                }
+            }
+            Patrolling.tmp = false;
+        } else if (
+            this.beliefSet.collabRole !== CollabRoles.DELIVER &&
+            this.beliefSet.isSingleCorridor &&
+            !Patrolling.tmp
+        ) {
+            Patrolling.tmp = true;
+        }
+
         await this.subIntention(["go_to", randomTile.x, randomTile.y]);
 
         if (this.stopped) throw ["stopped"]; // if stopped then quit

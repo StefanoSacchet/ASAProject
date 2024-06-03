@@ -1,41 +1,59 @@
 import { Graph } from "../../utils/astar.js";
+import { astar } from "../../utils/astar.js";
+import { GridNode } from "../../utils/astar.js";
 import Tile from "../../types/Tile.js";
 import BeliefSet from "../../types/BeliefSet.js";
+import { distance } from "../../utils/functions/distance.js";
 import Planner from "../../types/Planner.js";
 import { getByValue } from "../../utils/functions/gameMap_utils.js";
 
+const directions = [
+    [0, 1],
+    [1, 0],
+    [0, -1],
+    [-1, 0],
+];
+
 /**
- * @param {number} width
- * @param {number} height
- * @param {Array<Tile}
  * @param {BeliefSet} beliefSet
- * @param {Planner} planner
- * @returns {Promise<void>}
+ * @returns {Array<Array<GridNode>>}
  */
-export default async function onMapCallback(width, height, tiles, beliefSet, planner) {
-    // update map
-    beliefSet.map.width = width;
-    beliefSet.map.height = height;
-    for (const t of tiles) {
-        beliefSet.map.add(t);
-        if (t.delivery) beliefSet.map.addDelivery(t);
-        if (t.parcelSpawner) beliefSet.map.addSpawner(t);
+function pathsSpawnersToDeliveries(beliefSet) {
+    const pathWithCorridors = [];
+    let tmp = 0;
+    let isSingleCorridor = false;
+    for (const spawner of beliefSet.map.spawnerTiles.values()) {
+        for (const delivery of beliefSet.map.deliveryTiles.values()) {
+            const start = beliefSet.graph.grid[spawner.x][spawner.y];
+            const end = beliefSet.graph.grid[delivery.x][delivery.y];
+            const path = astar.search(beliefSet.graph, start, end);
+            if (path.length > 0) {
+                // if path found then identify corridors
+                let nodeCounter = 0;
+                for (const node of path) {
+                    let dirCounter = 0;
+                    for (const [dx, dy] of directions) {
+                        const nx = node.x + dx;
+                        const ny = node.y + dy;
+                        if (nx < 0 || nx >= beliefSet.map.width || ny < 0 || ny >= beliefSet.map.height) continue;
+                        const neighbor = beliefSet.graph.grid[nx][ny];
+                        if (neighbor.weight === 0) {
+                            dirCounter++;
+                            neighbor.corridor = true;
+                            tmp = true;
+                        }
+                    }
+                    if (dirCounter >= 2) {
+                        nodeCounter++;
+                    }
+                }
+                if (nodeCounter === path.length) isSingleCorridor = true;
+                if (tmp) pathWithCorridors.push(path);
+            }
+        }
     }
-    if (beliefSet.map.tiles.size - beliefSet.map.deliveryTiles.size > beliefSet.map.spawnerTiles.size)
-        beliefSet.map.moreNormalTilesThanSpawners = true;
 
-    // create graph for A*
-    beliefSet.matrix = Array(height)
-        .fill()
-        .map(() => Array(width).fill(0));
-    // fill in ones where there is a tile
-    tiles.forEach((tile) => {
-        beliefSet.matrix[tile.x][tile.y] = 1;
-    });
-    beliefSet.graph = new Graph(beliefSet.matrix);
-    // console.log(beliefSet.map.tiles);
-
-    update_planner_map_info(planner, beliefSet.map.tiles);
+    return { pathWithCorridors, isSingleCorridor };
 }
 
 // setup the objects and init portion of the pddl problem string.
@@ -70,4 +88,43 @@ function update_planner_map_info(planner, tiles) {
     // console.log(planner.map_init_pddlstring);
     // console.log("Planner obj init:");
     // console.log(planner.objects_init_pddlstring);
+}
+
+/**
+ * @param {number} width
+ * @param {number} height
+ * @param {Array<Tile>} tiles
+ * @param {BeliefSet} beliefSet
+ * @param {Planner} planner
+ * @returns {Promise<void>}
+ */
+export default async function onMapCallback(width, height, tiles, beliefSet, planner) {
+    // update map
+    beliefSet.map.width = width;
+    beliefSet.map.height = height;
+    for (const t of tiles) {
+        beliefSet.map.add(t);
+        if (t.delivery) beliefSet.map.addDelivery(t);
+        if (t.parcelSpawner) beliefSet.map.addSpawner(t);
+    }
+    if (beliefSet.map.tiles.size - beliefSet.map.deliveryTiles.size > beliefSet.map.spawnerTiles.size)
+        beliefSet.map.moreNormalTilesThanSpawners = true;
+
+    // create graph for A*
+    beliefSet.matrix = Array(height)
+        .fill()
+        .map(() => Array(width).fill(0));
+    // fill in ones where there is a tile
+    tiles.forEach((tile) => {
+        beliefSet.matrix[tile.x][tile.y] = 1;
+    });
+    beliefSet.graph = new Graph(beliefSet.matrix);
+
+    const { pathWithCorridors, isSingleCorridor } = pathsSpawnersToDeliveries(beliefSet);
+    beliefSet.pathWithCorridors = pathWithCorridors;
+    beliefSet.isSingleCorridor = isSingleCorridor;
+    console.log("isSingleCorridor", isSingleCorridor);
+
+    update_planner_map_info(planner, beliefSet.map.tiles);
+
 }

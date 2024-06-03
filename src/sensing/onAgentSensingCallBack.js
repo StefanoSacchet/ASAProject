@@ -1,5 +1,8 @@
+import { TopicMsgEnum } from "../../types/Message.js";
 import AgentModel from "../../types/AgentModel.js";
 import BeliefSet from "../../types/BeliefSet.js";
+import Message from "../../types/Message.js";
+import Say from "../plans/communicationPlans/Say.js";
 
 /**
  * @param {Array<AgentModel>} perceived_agents
@@ -7,13 +10,11 @@ import BeliefSet from "../../types/BeliefSet.js";
  * @returns {Promise<void>}
  */
 export default async function onAgentsSensingCallback(perceived_agents, beliefSet) {
-    // delete agents not present anymore
-    for (const [id, agent] of beliefSet.agents.entries()) {
-        if (!perceived_agents.find((agent) => agent.id === id)) beliefSet.agents.delete(id);
-    }
-    // update agents
-    perceived_agents.forEach((agent) => {
-        if (!beliefSet.agents.has(agent.id)) beliefSet.agents.set(agent.id, agent);
-        else beliefSet.agents.set(agent.id, agent);
-    });
+    beliefSet.updateAgents(perceived_agents);
+
+    if (perceived_agents.length === 0) return;
+
+    // send new agents sensed to allay
+    const msg = new Message(TopicMsgEnum.NEW_AGENTS, beliefSet.COMMUNICATION_KEY, perceived_agents);
+    await new Say(beliefSet.allayId, msg).execute(beliefSet);
 }
