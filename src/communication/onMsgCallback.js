@@ -43,7 +43,7 @@ export default async function onMsgCallback(id, name, msg, reply, beliefSet, myA
 
         case TopicMsgEnum.NEW_AGENTS: // new agents sensed
             if (DEBUG) console.log("New agents arrived");
-            // beliefSet.updateAgents(msg.content);
+            beliefSet.updateAgents(msg.content);
             break;
 
         case TopicMsgEnum.ME: // allay's me message

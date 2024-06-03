@@ -175,8 +175,25 @@ export default class Planner {
                     break;
             }
         } catch (error) {
-            throw "Error while executing action with error:", error;
+            throw ("Error while executing action with error:", error);
         }
+    }
+
+
+    isAboveDelivery(beliefSet) {
+        if (this.beliefSet.me.carrying.size > 0) {
+            for (const deliveryTile of this.beliefSet.map.deliveryTiles.values()) {
+                if (this.beliefSet.me.x == deliveryTile.x && this.beliefSet.me.y == deliveryTile.y) return true;
+            }
+        }
+        return false;
+    }
+
+    isAbovePickup(beliefSet) {
+        for (const parcel of this.beliefSet.parcels.values()) {
+            if (parcel.x == this.beliefSet.me.x && parcel.y == this.beliefSet.me.y) return parcel;
+        }
+        return false;
     }
 
     async plan_to_actions(plan, beliefSet) {
@@ -192,6 +209,18 @@ export default class Planner {
                 await Promise.all(previousStepGoals);
                 previousStepGoals = [];
                 console.log("Starting sequential step", step.action, ...step.args);
+            }
+
+            if (this.isAboveDelivery()) {
+                this.beliefSet.client.putdown();
+                this.beliefSet.me.carrying.clear();
+            }
+            if (this.beliefSet.collabRole === CollabRoles.DELIVER || !this.beliefSet.collabRole) {
+                const parcel = this.isAbovePickup();
+                if (parcel) {
+                    this.beliefSet.client.pickup();
+                    this.beliefSet.me.carrying.set(parcel.id, parcel);
+                }
             }
 
             let action = step.action.toLowerCase();

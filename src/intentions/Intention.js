@@ -25,7 +25,7 @@ export default class Intention {
      * #parent refers to caller
      */
     #parent;
-    
+
     /**
      * planner of the parent intention
      */
@@ -57,38 +57,32 @@ export default class Intention {
      * @param {BeliefSet} beliefSet
      * @param {Planner} planner
      */
-    async achieve(beliefSet, planner=undefined) {
+    async achieve(beliefSet, planner = undefined) {
         // Cannot start twice
         if (this.#started) return this;
         else this.#started = true;
 
-        if (this.predicate[0] == "go_to" && this.#parent) planner = this.#parent.planner; 
+        if (this.predicate[0] == "go_to" && this.#parent) planner = this.#parent.planner;
 
-        if (planner && planner.pddl &&  planner.is_supported_intention(this.predicate[0])) {
+        if (
+            planner &&
+            planner.pddl &&
+            planner.is_supported_intention(this.predicate[0]) &&
+            (!beliefSet.collabRole || this.predicate[0] === "go_to")
+        ) {
             if (this.stopped) throw ["stopped intention", ...this.predicate];
             this.#current_plan = new Plan();
-            
+
             planner.current_plan = this.#current_plan;
 
             try {
                 const plan_res = await planner.execute(beliefSet, this.predicate);
-                this.log(
-                    "succesful intention",
-                    ...this.predicate,
-                    "through with pddl, result:",
-                    plan_res
-                );
+                this.log("succesful intention", ...this.predicate, "through with pddl, result:", plan_res);
                 return plan_res;
             } catch (error) {
-                this.log(
-                    "failed intention",
-                    ...this.predicate,
-                    "through with pddl, with error:",
-                    ...error
-                );
+                this.log("failed intention", ...this.predicate, "through with pddl, with error:", ...error);
             }
-        }
-        else {
+        } else {
             // Trying all plans in the library
             for (const planClass of planner.planLibrary) {
                 // if stopped then quit
@@ -132,5 +126,4 @@ export default class Intention {
         // this.log( 'no plan satisfied the intention ', ...this.predicate );
         throw ["no plan satisfied the intention ", ...this.predicate];
     }
-
 }

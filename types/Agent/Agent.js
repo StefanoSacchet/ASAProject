@@ -111,6 +111,8 @@ export default class Agent {
                 let dis = distance(this.#beliefSet.me, this.#beliefSet.allayInfo, this.#beliefSet.graph);
                 if (dis === 0) break;
 
+                console.log("Distance between agents:", dis);
+
                 // if there are a lot of reachable delivery tiles, don't collaborate
                 let tmp = [];
                 for (const delivery of this.#beliefSet.map.deliveryTiles.values()) {
@@ -118,6 +120,8 @@ export default class Agent {
                     if (dis > 0) tmp.push(delivery);
                 }
                 if (tmp.length > 3) break;
+
+                console.log("Number of reachable delivery tiles:", tmp.length);
 
                 // loop for every delivery tile and check if they are colse to each other
                 let nearTiles = [];
@@ -132,6 +136,8 @@ export default class Agent {
                 }
                 // if all the delivery tiles are close to each other don't collaborate
                 if (nearTiles.length === tmp.length - 1) break;
+
+                console.log("Number", nearTiles.length);
 
                 // calculate the agent closer to the delivery
                 const myTile = nearestDelivery(this.#beliefSet.me, this.#beliefSet.map, this.#beliefSet.graph);
