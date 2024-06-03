@@ -8,6 +8,7 @@ import { nearestDelivery } from "../utils/functions/distance.js";
 import { DEBUG } from "../config.js";
 import { PddlDomain, PddlAction, PddlProblem, PddlExecutor, onlineSolver, Beliefset } from "@unitn-asa/pddl-client";
 import BeliefSet from "./BeliefSet.js";
+import { CollabRoles } from "./Message.js";
 
 import fs from "fs";
 import path from "path";
@@ -179,19 +180,18 @@ export default class Planner {
         }
     }
 
-
     isAboveDelivery(beliefSet) {
-        if (this.beliefSet.me.carrying.size > 0) {
-            for (const deliveryTile of this.beliefSet.map.deliveryTiles.values()) {
-                if (this.beliefSet.me.x == deliveryTile.x && this.beliefSet.me.y == deliveryTile.y) return true;
+        if (beliefSet.me.carrying.size > 0) {
+            for (const deliveryTile of beliefSet.map.deliveryTiles.values()) {
+                if (beliefSet.me.x == deliveryTile.x && beliefSet.me.y == deliveryTile.y) return true;
             }
         }
         return false;
     }
 
     isAbovePickup(beliefSet) {
-        for (const parcel of this.beliefSet.parcels.values()) {
-            if (parcel.x == this.beliefSet.me.x && parcel.y == this.beliefSet.me.y) return parcel;
+        for (const parcel of beliefSet.parcels.values()) {
+            if (parcel.x == beliefSet.me.x && parcel.y == beliefSet.me.y) return parcel;
         }
         return false;
     }
@@ -211,15 +211,15 @@ export default class Planner {
                 console.log("Starting sequential step", step.action, ...step.args);
             }
 
-            if (this.isAboveDelivery()) {
-                this.beliefSet.client.putdown();
-                this.beliefSet.me.carrying.clear();
+            if (this.isAboveDelivery(beliefSet)) {
+                beliefSet.client.putdown();
+                beliefSet.me.carrying.clear();
             }
-            if (this.beliefSet.collabRole === CollabRoles.DELIVER || !this.beliefSet.collabRole) {
-                const parcel = this.isAbovePickup();
+            if (beliefSet.collabRole === CollabRoles.DELIVER || !beliefSet.collabRole) {
+                const parcel = this.isAbovePickup(beliefSet);
                 if (parcel) {
-                    this.beliefSet.client.pickup();
-                    this.beliefSet.me.carrying.set(parcel.id, parcel);
+                    beliefSet.client.pickup();
+                    beliefSet.me.carrying.set(parcel.id, parcel);
                 }
             }
 
