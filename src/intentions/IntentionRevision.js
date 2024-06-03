@@ -90,7 +90,7 @@ export default class IntentionRevision {
                                 this.beliefSet.graph
                             );
                             if (new_intention) {
-                                this.clear();
+                                await this.clear();
                                 this.intention_queue.push(new_intention);
                                 // this.intention_queue.shift();
                                 continue;
