@@ -131,12 +131,12 @@ export default class Planner {
             case "go_deliver":
                 let deliveryTile = nearestDelivery(beliefSet.me, beliefSet.map, beliefSet.graph);
                 var dest_tile = getByValue(beliefSet.map.tiles, [deliveryTile.x, deliveryTile.y]);
-                this.goal_pddlstring = `and (delivered_at tile_${dest_tile})`;
+                this.goal_pddlstring = `and (delivered_at parcel tile_${dest_tile})`;
                 this.map_init_pddlstring += `(carrying parcel)`;
                 break;
             case "go_pick_up":
                 this.id = predicate[3];
-                this.map_init_pddlstring += `(parcel_at tile_${dest_tile}) `;
+                this.map_init_pddlstring += `(parcel_at parcel tile_${dest_tile}) `;
                 this.goal_pddlstring = `and (carrying parcel)`;
                 break;
             default:
@@ -204,11 +204,11 @@ export default class Planner {
         for (const step of plan) {
             if (this.current_plan.stopped) throw ["stopped"]; // if stopped then quit
             if (step.parallel) {
-                console.log("Starting concurrent step", step.action, ...step.args);
+                if(DEBUG) console.log("Starting concurrent step", step.action, ...step.args);
             } else {
                 await Promise.all(previousStepGoals);
                 previousStepGoals = [];
-                console.log("Starting sequential step", step.action, ...step.args);
+                if(DEBUG) console.log("Starting sequential step", step.action, ...step.args);
             }
 
             if (this.isAboveDelivery(beliefSet)) {
@@ -267,12 +267,14 @@ export default class Planner {
                 this.goal_pddlstring
             );
 
+            // this.problem.saveToFile();
             // if (DEBUG) console.log(this.problem.toPddlString());
             // if (DEBUG) console.log(this.domain);
             var plan = await onlineSolver(this.domain, this.problem.toPddlString());
+            if (!plan) throw "No valid plan available.";
+            
             if (DEBUG) console.log(plan);
 
-            if (plan == []) throw "No valid plan available.";
 
             // this.init_executor(beliefSet);
             // try {
