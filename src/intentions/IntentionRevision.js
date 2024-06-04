@@ -175,7 +175,7 @@ export default class IntentionRevision {
                         this.beliefSet.COMMUNICATION_KEY,
                         intention.predicate
                     );
-                    new Say(this.beliefSet.allayId, msg).execute(this.beliefSet);
+                    await new Say(this.beliefSet.allayId, msg).execute(this.beliefSet);
                 }
 
                 // Start achieving intention

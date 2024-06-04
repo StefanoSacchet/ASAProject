@@ -51,7 +51,7 @@ export default class GoDeliver extends Plan {
             const path = astar.search(this.beliefSet.graph, start, end);
             if (path.length === 0) {
                 const msg = new Message(TopicMsgEnum.NEW_INTENTION, this.beliefSet.COMMUNICATION_KEY, ["go_deliver"]);
-                new Say(this.beliefSet.allayId, msg).execute(this.beliefSet);
+                await new Say(this.beliefSet.allayId, msg).execute(this.beliefSet);
                 // if no path found then quit
                 throw ["no path found"];
             }
@@ -70,7 +70,7 @@ export default class GoDeliver extends Plan {
                 this.beliefSet.me.carrying.values().next().value.id,
             ];
             const msg = new Message(TopicMsgEnum.NEW_INTENTION, this.beliefSet.COMMUNICATION_KEY, intention);
-            new Say(this.beliefSet.allayId, msg).execute(this.beliefSet);
+            await new Say(this.beliefSet.allayId, msg).execute(this.beliefSet);
         }
 
         await this.subIntention(["go_to", deliveryTile.x, deliveryTile.y]);

@@ -62,13 +62,14 @@ export default class GoTo extends Plan {
         // move to each node in the path
         for (let i = 0; i < res.length; i++) {
             if (this.isAboveDelivery()) {
-                this.beliefSet.client.putdown();
+                await this.beliefSet.client.putdown();
                 this.beliefSet.me.carrying.clear();
             }
+            // moves slower but picks up parcels that were not in the intention
             if (this.beliefSet.collabRole === CollabRoles.DELIVER || !this.beliefSet.collabRole) {
                 const parcel = this.isAbovePickup();
                 if (parcel) {
-                    this.beliefSet.client.pickup();
+                    await this.beliefSet.client.pickup();
                     this.beliefSet.me.carrying.set(parcel.id, parcel);
                 }
             }
