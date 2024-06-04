@@ -184,7 +184,7 @@ export default class IntentionRevision {
                     .achieve(this.beliefSet, this.planner)
                     // Catch eventual error and continue
                     .catch((error) => {
-                        if (DEBUG) console.log("Failed intention", ...intention.predicate, "with error:", error);
+                        if (DEBUG) console.log("Failed intention", ...intention.predicate, "with error:", ...error);
                     });
 
                 // Remove from the queue
