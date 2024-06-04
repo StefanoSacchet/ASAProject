@@ -42,6 +42,7 @@ export default class IntentionRevision {
     async loop() {
         while (true) {
             // Consumes intention_queue if not empty
+
             if (this.intention_queue.length > 0) {
                 if (DEBUG)
                     console.log(
