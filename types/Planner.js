@@ -6,7 +6,7 @@ import GoDeliver from "../src/plans/GoDeliver.js";
 import { getByValue } from "../utils/functions/gameMap_utils.js";
 import { nearestDelivery } from "../utils/functions/distance.js";
 import { DEBUG } from "../config.js";
-import { PddlDomain, PddlAction, PddlProblem, PddlExecutor, onlineSolver} from "@unitn-asa/pddl-client";
+import { PddlDomain, PddlAction, PddlProblem, PddlExecutor, onlineSolver } from "@unitn-asa/pddl-client";
 import BeliefSet from "./BeliefSet.js";
 import { CollabRoles } from "./Message.js";
 
@@ -68,8 +68,8 @@ export default class Planner {
     goal_pddlstring;
 
     /** @type {Array<string>} */
-    supported_intentions = ["go_to", "go_deliver", "go_pick_up"];
-    // supported_intentions = ["go_to"];
+    // supported_intentions = ["go_to", "go_deliver", "go_pick_up"];
+    supported_intentions = ["go_to"];
 
     current_plan;
 
@@ -150,18 +150,24 @@ export default class Planner {
     async execute_action(action, beliefSet) {
         try {
             var res = true;
+            let status_x = 0;
+            let status_y = 0;
             switch (action) {
                 case "move_right":
                     res = await beliefSet.client.move("right");
+                    if (res) status_x = 1;
                     break;
                 case "move_left":
                     res = await beliefSet.client.move("left");
+                    if (res) status_x = -1;
                     break;
                 case "move_up":
                     res = await beliefSet.client.move("up");
+                    status_y = 1;
                     break;
                 case "move_down":
                     res = await beliefSet.client.move("down");
+                    status_y = -1;
                     break;
                 case "pickup":
                     let pickup = await beliefSet.client.pickup();
@@ -178,25 +184,35 @@ export default class Planner {
                     break;
             }
             if (!res) throw ["Action failed"];
+            else {
+                beliefSet.me.x += status_x;
+                beliefSet.me.y += status_y;
+            }
         } catch (error) {
             throw ["Error while executing action with error:", error];
         }
     }
 
-    isAboveDelivery(beliefSet) {
-        if (beliefSet.me.carrying.size > 0) {
-            for (const deliveryTile of beliefSet.map.deliveryTiles.values()) {
-                if (beliefSet.me.x == deliveryTile.x && beliefSet.me.y == deliveryTile.y) return true;
+    // isAboveDelivery(beliefSet) {
+    //     if (beliefSet.me.carrying.size > 0) {
+    //         for (const deliveryTile of beliefSet.map.deliveryTiles.values()) {
+    //             if (beliefSet.me.x == deliveryTile.x && beliefSet.me.y == deliveryTile.y) return true;
+    //         }
+    //     }
+    //     return false;
+    // }
+
+    async isAbovePickup(beliefSet) {
+        for (const parcel of beliefSet.parcels.values()) {
+            // round down to nearest integer my position
+            if (parcel.x == beliefSet.me.x && parcel.y == beliefSet.me.y) {
+                let pickup = await beliefSet.client.pickup();
+                // console.log(pickup);
+                // console.log(beliefSet.me.x, beliefSet.me.y);
+                // console.log(parcel.x, parcel.y);
+                await beliefSet.me.carrying.set(parcel.id, parcel);
             }
         }
-        return false;
-    }
-
-    isAbovePickup(beliefSet) {
-        for (const parcel of beliefSet.parcels.values()) {
-            if (parcel.x == beliefSet.me.x && parcel.y == beliefSet.me.y) return parcel;
-        }
-        return false;
     }
 
     async plan_to_actions(plan, beliefSet) {
@@ -207,25 +223,13 @@ export default class Planner {
         for (const step of plan) {
             if (this.current_plan.stopped) throw ["stopped"]; // if stopped then quit
             if (step.parallel) {
-                if(DEBUG) console.log("Starting concurrent step", step.action, ...step.args);
+                if (DEBUG) console.log("Starting concurrent step", step.action, ...step.args);
             } else {
                 await Promise.all(previousStepGoals).catch((err) => {
                     throw [err];
                 });
                 previousStepGoals = [];
-                if(DEBUG) console.log("Starting sequential step", step.action, ...step.args);
-            }
-
-            if (this.isAboveDelivery(beliefSet)) {
-                beliefSet.client.putdown();
-                beliefSet.me.carrying.clear();
-            }
-            if (beliefSet.collabRole === CollabRoles.DELIVER || !beliefSet.collabRole) {
-                const parcel = this.isAbovePickup(beliefSet);
-                if (parcel) {
-                    beliefSet.client.pickup();
-                    beliefSet.me.carrying.set(parcel.id, parcel);
-                }
+                if (DEBUG) console.log("Starting sequential step", step.action, ...step.args);
             }
 
             let action = step.action.toLowerCase();
@@ -235,12 +239,12 @@ export default class Planner {
             // }
 
             try {
-                console.log("Executing action");
+                // console.log("Executing action");
                 var exec = this.execute_action(action, beliefSet);
                 if (exec && exec.catch) {
                     exec.catch((err) => {
                         // throw [err];
-                        console.error('An error occurred:', err);
+                        console.error("An error occurred:", err);
                         return false;
                     }); //new Error('Step failed');
                     previousStepGoals.push(exec);
@@ -252,9 +256,22 @@ export default class Planner {
                 return false;
                 throw ("Error while executing action", action, "with error", error);
             }
+
+            // if (this.isAboveDelivery(beliefSet)) {
+            //     beliefSet.client.putdown();
+            //     beliefSet.me.carrying.clear();
+            // }
+            if (beliefSet.collabRole === CollabRoles.DELIVER || !beliefSet.collabRole) {
+                await this.isAbovePickup(beliefSet);
+                // console.log(parcel);
+                // if (parcel) {
+                //     beliefSet.client.pickup();
+                //     beliefSet.me.carrying.set(parcel.id, parcel);
+                // }
+            }
         }
 
-        console.log("In planner, waiting for last steps to complete");
+        // console.log("In planner, waiting for last steps to complete");
         // wait for last steps to complete before finish blackbox plan execution intention
         await Promise.all(previousStepGoals).catch((err) => {
             throw [err];
@@ -283,9 +300,12 @@ export default class Planner {
             // this.problem.saveToFile();
             // if (DEBUG) console.log(this.problem.toPddlString());
             // if (DEBUG) console.log(this.domain);
-            var plan = await onlineSolver(this.domain, this.problem.toPddlString());
-            if (!plan) throw "No valid plan available.";
-            
+            try {
+                var plan = await onlineSolver(this.domain, this.problem.toPddlString());
+                if (!plan) throw "No valid plan available.";
+            } catch (error) {
+                throw ["Error while solving pddl with error", error];
+            }
             // if (DEBUG) console.log(plan);
 
             try {
