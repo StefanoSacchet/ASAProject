@@ -21,6 +21,6 @@ export default async function onYouCallback(id, name, x, y, score, beliefSet) {
 
     if (beliefSet.allayId) {
         const msg = new Message(TopicMsgEnum.ME, beliefSet.COMMUNICATION_KEY, beliefSet.me);
-        new Say(beliefSet.allayId, msg).execute(beliefSet);
+        await new Say(beliefSet.allayId, msg).execute(beliefSet);
     }
 }

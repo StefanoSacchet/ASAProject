@@ -159,7 +159,12 @@ export default class Patrolling extends Plan {
             }
         }
 
-        if (this.beliefSet.collabRole !== CollabRoles.DELIVER && this.beliefSet.isSingleCorridor && Patrolling.tmp) {
+        if (
+            this.beliefSet.collabRole &&
+            this.beliefSet.collabRole !== CollabRoles.DELIVER &&
+            this.beliefSet.isSingleCorridor &&
+            Patrolling.tmp
+        ) {
             // go to a tile near spawner tile
             const directions = [
                 [0, 1],

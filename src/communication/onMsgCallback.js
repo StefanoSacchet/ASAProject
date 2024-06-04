@@ -60,7 +60,7 @@ export default async function onMsgCallback(id, name, msg, reply, beliefSet, myA
             if (DEBUG) console.log("New intention message");
             beliefSet.allayInfo.pos = { x: msg.content[1], y: msg.content[2] };
             myAgent.clear();
-            myAgent.push(["go_deliver"]); // push new intention
+            await myAgent.push(msg.content); // push new intention
             break;
 
         case TopicMsgEnum.INTENTION_COMPLETED: // intention completed message

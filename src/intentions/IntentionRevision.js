@@ -44,6 +44,7 @@ export default class IntentionRevision {
     async loop() {
         while (true) {
             // Consumes intention_queue if not empty
+
             if (this.intention_queue.length > 0) {
                 if (DEBUG)
                     console.log(
@@ -176,7 +177,7 @@ export default class IntentionRevision {
                         this.beliefSet.COMMUNICATION_KEY,
                         intention.predicate
                     );
-                    new Say(this.beliefSet.allayId, msg).execute(this.beliefSet);
+                    await new Say(this.beliefSet.allayId, msg).execute(this.beliefSet);
                 }
 
                 // Start achieving intention
