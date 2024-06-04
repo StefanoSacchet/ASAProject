@@ -80,7 +80,8 @@ export default class Intention {
                 this.log("succesful intention", ...this.predicate, "through with pddl, result:", plan_res);
                 return plan_res;
             } catch (error) {
-                this.log("failed intention", ...this.predicate, "through with pddl, with error:", error);
+                this.log("failed intention", ...this.predicate, "through with pddl, with error:", ...error);
+                throw [error];
             }
         } else {
             // Trying all plans in the library
@@ -115,6 +116,7 @@ export default class Intention {
                             "with error:",
                             ...error
                         );
+                        throw [error];
                     }
                 }
             }
