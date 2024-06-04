@@ -73,6 +73,8 @@ export default class Planner {
 
     current_plan;
 
+    plan;
+
     id;
 
     constructor(pddl) {
@@ -307,13 +309,13 @@ export default class Planner {
                 throw ["Error while solving pddl with error", error];
             }
             // if (DEBUG) console.log(plan);
-
-            try {
-                let res = await this.plan_to_actions(plan, beliefSet);
-                if (!res) throw ["Action failed"];
-            } catch (error) {
-                throw ["Error while turning plan to actions with error", ...error];
-            }
+            this.plan = plan;
+            // try {
+            //     let res = await this.plan_to_actions(plan, beliefSet);
+            //     if (!res) throw ["Action failed"];
+            // } catch (error) {
+            //     throw ["Error while turning plan to actions with error", ...error];
+            // }
             return true;
         } catch (error) {
             if (DEBUG) console.log(error);

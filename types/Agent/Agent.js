@@ -210,7 +210,7 @@ export default class Agent {
 
         this.#beliefSet.client = this.#apiClient;
 
-        // this.loop();
+        this.loop();
         this.#myAgent.loop();
     }
 }

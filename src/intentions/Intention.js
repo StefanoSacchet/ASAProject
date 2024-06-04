@@ -64,26 +64,27 @@ export default class Intention {
 
         if (this.predicate[0] == "go_to" && this.#parent) planner = this.#parent.planner;
 
-        if (
-            planner &&
-            planner.pddl &&
-            planner.is_supported_intention(this.predicate[0]) &&
-            (!beliefSet.collabRole || this.predicate[0] === "go_to")
-        ) {
-            if (this.stopped) throw ["stopped intention", ...this.predicate];
-            this.#current_plan = new Plan();
+        // if (
+        //     planner &&
+        //     planner.pddl &&
+        //     planner.is_supported_intention(this.predicate[0]) &&
+        //     (!beliefSet.collabRole || this.predicate[0] === "go_to")
+        // ) {
+        //     if (this.stopped) throw ["stopped intention", ...this.predicate];
+        //     this.#current_plan = new Plan();
 
-            planner.current_plan = this.#current_plan;
+        //     planner.current_plan = this.#current_plan;
 
-            try {
-                const plan_res = await planner.execute(beliefSet, this.predicate);
-                this.log("succesful intention", ...this.predicate, "through with pddl, result:", plan_res);
-                return plan_res;
-            } catch (error) {
-                this.log("failed intention", ...this.predicate, "through with pddl, with error:", ...error);
-                throw [error];
-            }
-        } else {
+        //     try {
+        //         const plan_res = await planner.execute(beliefSet, this.predicate);
+        //         this.log("succesful intention", ...this.predicate, "through with pddl, result:", plan_res);
+        //         return plan_res;
+        //     } catch (error) {
+        //         this.log("failed intention", ...this.predicate, "through with pddl, with error:", ...error);
+        //         throw [error];
+        //     }
+        // } else {
+        
             // Trying all plans in the library
             for (const planClass of planner.planLibrary) {
                 // if stopped then quit
@@ -120,7 +121,9 @@ export default class Intention {
                     }
                 }
             }
-        }
+        
+        // }
+
         // if stopped then quit
         if (this.stopped) throw ["stopped intention", ...this.predicate];
 
