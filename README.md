@@ -10,6 +10,8 @@
 * Defining strategies and behaviours
 * Replanning and redeliberating
 
+![intro image](intro_image.png)
+
 ## Project structure
 
 ASAProject
@@ -118,6 +120,6 @@ node starter.js
 
 Will spawn two processes running:
 ```sh
-node `src/agentSlave.js 2` 
-node `src/agentMaster.js 1`
+node src/agentSlave.js 2 
+node src/agentMaster.js 1
 ```
