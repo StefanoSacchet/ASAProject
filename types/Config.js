@@ -107,25 +107,4 @@ export default class Config {
         /** @type {number} */
         this.AGENT_PROB_TRHESHOLD = AGENT_PROB_TRHESHOLD;
     }
-
-    /**
-     * Sets the configuration parameters.
-     * @param {Object} param - The configuration parameters.
-     */
-    // setConfig(param) {
-    //     this.MAP_FILE = param.MAP_FILE;
-    //     this.PARCELS_GENERATION_INTERVAL = param.PARCELS_GENERATION_INTERVAL;
-    //     this.PARCELS_MAX = param.PARCELS_MAX;
-    //     this.MOVEMENT_STEPS = param.MOVEMENT_STEPS;
-    //     this.MOVEMENT_DURATION = param.MOVEMENT_DURATION;
-    //     this.AGENTS_OBSERVATION_DISTANCE = param.AGENTS_OBSERVATION_DISTANCE;
-    //     this.PARCELS_OBSERVATION_DISTANCE = param.PARCELS_OBSERVATION_DISTANCE;
-    //     this.AGENT_TIMEOUT = param.AGENT_TIMEOUT;
-    //     this.PARCEL_REWARD_AVG = param.PARCEL_REWARD_AVG;
-    //     this.PARCEL_REWARD_VARIANCE = param.PARCEL_REWARD_VARIANCE;
-    //     this.PARCEL_DECADING_INTERVAL = param.PARCEL_DECADING_INTERVAL;
-    //     this.RANDOMLY_MOVING_AGENTS = param.RANDOMLY_MOVING_AGENTS;
-    //     this.RANDOM_AGENT_SPEED = param.RANDOM_AGENT_SPEED;
-    //     this.CLOCK = param.CLOCK;
-    // }
 }

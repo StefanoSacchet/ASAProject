@@ -131,8 +131,6 @@ export default class Patrolling extends Plan {
             randomTile = this.getRandomTile();
         }
 
-        // if (!randomTile) randomTile = this.getRandomTile();
-
         // if the agent is a deliverer then move to delivery tiles
         if (this.beliefSet.collabRole === CollabRoles.DELIVER) {
             if (DEBUG) console.log("Collaboration role is DELIVER, moving to nearest delivery tile");

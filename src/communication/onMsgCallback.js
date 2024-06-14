@@ -51,11 +51,6 @@ export default async function onMsgCallback(id, name, msg, reply, beliefSet, myA
             beliefSet.allayInfo = msg.content;
             break;
 
-        case TopicMsgEnum.COLLAB: // collaboration message
-            if (DEBUG) console.log("Collaboration message");
-            // myAgent.clear();
-            break;
-
         case TopicMsgEnum.NEW_INTENTION: // new intention message
             if (DEBUG) console.log("New intention message");
             beliefSet.allayInfo.pos = { x: msg.content[1], y: msg.content[2] };

@@ -5,19 +5,19 @@ function spawnProcesses() {
     const agentSlave = spawn("npm run agentSlave " + 2, { shell: true });
     const agentMaster = spawn("npm run agentMaster " + 1, { shell: true });
 
-    agentSlave.stdout.on('data', data => {
+    agentSlave.stdout.on("data", (data) => {
         console.log(`Output from agentSlave: ${data}`);
     });
 
-    agentMaster.stdout.on('data', data => {
+    agentMaster.stdout.on("data", (data) => {
         console.log(`Output from agentMaster: ${data}`);
     });
 
-    agentSlave.stderr.on('data', data => {
+    agentSlave.stderr.on("data", (data) => {
         console.log(`Stderr from agentSlave: ${data}`);
     });
 
-    agentMaster.stderr.on('data', data => {
+    agentMaster.stderr.on("data", (data) => {
         console.log(`Stderr from agentMaster: ${data}`);
     });
 

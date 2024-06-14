@@ -19,7 +19,7 @@ export default class IntentionRevision {
      * @param {BeliefSet} beliefSet
      * @param {Planner} planner
      */
-    constructor(beliefSet, planner=undefined) {
+    constructor(beliefSet, planner = undefined) {
         this.beliefSet = beliefSet;
         this.planner = planner;
     }
@@ -169,13 +169,15 @@ export default class IntentionRevision {
                         continue;
                     }
 
-                    // say to allay that parcel is being picked up
-                    const msg = new Message(
-                        TopicMsgEnum.PICK_UP_PARCEL,
-                        this.beliefSet.COMMUNICATION_KEY,
-                        intention.predicate
-                    );
-                    await new Say(this.beliefSet.allayId, msg).execute(this.beliefSet);
+                    if (this.beliefSet.allayId) {
+                        // say to allay that parcel is being picked up
+                        const msg = new Message(
+                            TopicMsgEnum.PICK_UP_PARCEL,
+                            this.beliefSet.COMMUNICATION_KEY,
+                            intention.predicate
+                        );
+                        await new Say(this.beliefSet.allayId, msg).execute(this.beliefSet);
+                    }
                 }
 
                 // Start achieving intention
@@ -201,8 +203,6 @@ export default class IntentionRevision {
         this.intention_queue.forEach((i) => i.stop());
         this.intention_queue = [];
     }
-
-    // async push ( predicate ) { }
 
     log(...args) {
         if (DEBUG) console.log(...args);

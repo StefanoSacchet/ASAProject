@@ -2,7 +2,7 @@ import { spawn } from "child_process";
 
 // Function to spawn child processes
 function spawnProcesses() {
-    for (let i = 0; i < 5; i++){
+    for (let i = 0; i < 5; i++) {
         const agentSlave = spawn("npm run agentSlave " + i, { shell: true });
         const agentMaster = spawn("npm run agentMaster " + i, { shell: true });
     }
@@ -25,7 +25,6 @@ function spawnProcesses() {
     // agentMaster.stderr.on('data', data => {
     //     console.log(`Stderr from agentMaster: ${data}`);
     // });
-
 
     // childProcess.on('close', code => {
     //     console.log(`Child process ${i} exited with code ${code}`);

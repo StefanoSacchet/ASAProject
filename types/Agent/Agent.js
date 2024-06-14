@@ -70,7 +70,7 @@ export default class Agent {
         if (token === undefined) token = config.token;
         this.#apiClient = new DeliverooApi(config.host, token);
         this.#beliefSet = new BeliefSet();
-        this.#use_pddl = false;     // set this value to true/false depending if usage of pddl is wanted or not
+        this.#use_pddl = false; // set this value to true/false depending if usage of pddl is wanted or not
         this.#planner = new Planner(this.#use_pddl);
         this.#beliefSet.HANDSHAKE_KEY = handShakeKey;
         this.#beliefSet.COMMUNICATION_KEY = communicationKey;
@@ -87,7 +87,7 @@ export default class Agent {
      * @returns {Object}
      */
     getAdditionalConfig(config) {
-        const PARCEL_PROB_DECAY = 0.05 //config.CLOCK / 1000;
+        const PARCEL_PROB_DECAY = 0.05;
         const PARCEL_PROB_TRHESHOLD = 0.5;
         const AGENT_PROB_DECAY = 0.1;
         const AGENT_PROB_TRHESHOLD = 0.6;

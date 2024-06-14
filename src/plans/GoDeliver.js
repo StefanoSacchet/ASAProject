@@ -11,7 +11,7 @@ export default class GoDeliver extends Plan {
      * @param {BeliefSet} beliefSet
      * @param {Planner} planner
      */
-    constructor(parent, beliefSet, planner=undefined) {
+    constructor(parent, beliefSet, planner = undefined) {
         super(parent, beliefSet, planner);
     }
 
@@ -62,15 +62,17 @@ export default class GoDeliver extends Plan {
                 deliveryTile = path[Math.round(path.length / 2) - 1]; // middle of the path
             }
 
-            // tell the other agent to go pick up the parcel
-            const intention = [
-                "go_pick_up",
-                deliveryTile.x,
-                deliveryTile.y,
-                this.beliefSet.me.carrying.values().next().value.id,
-            ];
-            const msg = new Message(TopicMsgEnum.NEW_INTENTION, this.beliefSet.COMMUNICATION_KEY, intention);
-            await new Say(this.beliefSet.allayId, msg).execute(this.beliefSet);
+            if (this.beliefSet.allayId) {
+                // tell the other agent to go pick up the parcel
+                const intention = [
+                    "go_pick_up",
+                    deliveryTile.x,
+                    deliveryTile.y,
+                    this.beliefSet.me.carrying.values().next().value.id,
+                ];
+                const msg = new Message(TopicMsgEnum.NEW_INTENTION, this.beliefSet.COMMUNICATION_KEY, intention);
+                await new Say(this.beliefSet.allayId, msg).execute(this.beliefSet);
+            }
         }
 
         if (deliveryTile === null) throw ["no path found"]; // if no path found then quit

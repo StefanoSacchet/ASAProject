@@ -51,7 +51,6 @@ export default class GoTo extends Plan {
         var res;
         
         if (!this.planner.pddl) {
-            // console.log("no pddl");
             this.updateGraph();
             
             const start = this.beliefSet.graph.grid[this.beliefSet.me.x][this.beliefSet.me.y];
@@ -59,11 +58,9 @@ export default class GoTo extends Plan {
             res = astar.search(this.beliefSet.graph, start, end); // A* search
         }
         else {
-            // console.log("pddl");
             try {
                 await this.planner.execute(this.beliefSet, [go_to, x, y]);
                 const plan_res = this.planner.plan;
-                // console.log(plan_res);
                 res = []; 
                 plan_res.forEach((action) => {
                     

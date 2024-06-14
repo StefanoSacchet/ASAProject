@@ -4,7 +4,6 @@ export const TopicMsgEnum = Object.freeze({
     NEW_PARCELS: "new_parcels",
     NEW_AGENTS: "new_agents",
     ME: "me",
-    COLLAB: "collab",
     NEW_INTENTION: "new_intention",
     INTENTION_COMPLETED: "intention_completed",
     PICK_UP_PARCEL: "pick_up_parcel",

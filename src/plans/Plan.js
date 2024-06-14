@@ -25,7 +25,7 @@ export default class Plan {
      * @param {BeliefSet} beliefSet
      * @param {Planner} planner
      */
-    constructor(parent, beliefSet, planner=undefined) {
+    constructor(parent, beliefSet, planner = undefined) {
         this.#parent = parent;
         this.beliefSet = beliefSet;
         this.planner = planner;

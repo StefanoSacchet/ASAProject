@@ -15,9 +15,6 @@ import Say from "../plans/communicationPlans/Say.js";
  */
 export default async function onParcelsSensingCallback(perceived_parcels, beliefSet, myAgent) {
     // remove expired parcels, add new ones and update carriedBy
-    // console.log("onParcelsSensingCallback");
-    // console.log(perceived_parcels);
-    // console.log(beliefSet.parcels);
     const { isNewParcelSensed, isCarryingEmpty } = beliefSet.updateParcels(perceived_parcels);
 
     // clear intention if carrying is empty
@@ -32,23 +29,21 @@ export default async function onParcelsSensingCallback(perceived_parcels, belief
         return;
     }
 
+    // if collab role is pick up and single corridor, go deliver
     if (beliefSet.collabRole === CollabRoles.PICK_UP && beliefSet.isSingleCorridor && !isCarryingEmpty) {
         await myAgent.clear();
         myAgent.push(["go_deliver"]);
         return;
     }
 
+    // skip option generation if no new parcels sensed
     if (!isNewParcelSensed) return;
 
-    // if patrolling and new parcels are observed, clear intention
-    // if (myAgent.intention_queue[0]?.predicate[0] === "patrolling") {
-    //     console.log("Clearing intention queue");
-    //     await myAgent.clear();
-    // }
-
     // send new parcels sensed to allay
-    const msg = new Message(TopicMsgEnum.NEW_PARCELS, beliefSet.COMMUNICATION_KEY, perceived_parcels);
-    await new Say(beliefSet.allayId, msg).execute(beliefSet);
+    if (beliefSet.allayId) {
+        const msg = new Message(TopicMsgEnum.NEW_PARCELS, beliefSet.COMMUNICATION_KEY, perceived_parcels);
+        await new Say(beliefSet.allayId, msg).execute(beliefSet);
+    }
 
     /**
      * Options generation

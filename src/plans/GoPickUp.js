@@ -9,7 +9,7 @@ export default class GoPickUp extends Plan {
      * @param {BeliefSet} beliefSet
      * @param {Planner} planner
      */
-    constructor(parent, beliefSet, planner=undefined) {
+    constructor(parent, beliefSet, planner = undefined) {
         super(parent, beliefSet, planner);
     }
 
@@ -29,19 +29,9 @@ export default class GoPickUp extends Plan {
             //     await new Say(this.beliefSet.allayId, msg).execute(this.beliefSet);
             // }
 
-            if (DEBUG) console.log("Gopickup", go_to, pickup);
+            if (DEBUG) console.log("go_pickup", go_to, pickup);
             this.beliefSet.me.carrying.set(id, this.beliefSet.parcels.get(id));
             this.beliefSet.parcels.get(id).carriedBy = this.beliefSet.me.id;
-            // const carriedArray = getCarriedRewardAndTreshold(me, config);
-            // const carriedReward = carriedArray[0];
-            // const TRESHOLD = carriedArray[1];
-
-            // // go deliver
-            // if (carriedReward > TRESHOLD && TRESHOLD !== 0) {
-            //     // if (DEBUG) console.log("go_deliver");
-            //     myAgent.push(["go_deliver"]);
-            //     return;
-            // }
 
             // tell allay that parcel is picked up
             if (this.beliefSet.allayId) {
