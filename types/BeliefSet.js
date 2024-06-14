@@ -33,7 +33,7 @@ export default class BeliefSet {
     allayInfo;
 
     /**
-     * Holds parcels that allay is going to pick up 
+     * Holds parcels that allay is going to pick up
      * @type {Map<string, Parcel>}
      */
     allayParcelsMap = new Map();
@@ -124,7 +124,6 @@ export default class BeliefSet {
         // delete agents not present anymore
         for (const agent of this.agents.values()) {
             if (!perceived_agents.find((a) => a.id === agent.id)) agent.probability -= this.config.AGENT_PROB_DECAY;
-
             if (agent.probability < this.config.AGENT_PROB_TRHESHOLD) this.agents.delete(agent.id);
         }
     }

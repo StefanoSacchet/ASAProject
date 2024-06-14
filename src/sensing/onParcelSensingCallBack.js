@@ -1,4 +1,4 @@
-import { updateParcels, getCarriedRewardAndTreshold } from "../../utils/functions/parcelManagement.js";
+import { getCarriedRewardAndTreshold } from "../../utils/functions/parcelManagement.js";
 import { chooseBestOptionV2 } from "../../utils/functions/intentions.js";
 import { CollabRoles, TopicMsgEnum } from "../../types/Message.js";
 import Parcel from "../../types/Parcel.js";

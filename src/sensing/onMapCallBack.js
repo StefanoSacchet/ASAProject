@@ -3,7 +3,6 @@ import { astar } from "../../utils/astar.js";
 import { GridNode } from "../../utils/astar.js";
 import Tile from "../../types/Tile.js";
 import BeliefSet from "../../types/BeliefSet.js";
-import { distance } from "../../utils/functions/distance.js";
 import Planner from "../../types/Planner.js";
 import { getByValue } from "../../utils/functions/gameMap_utils.js";
 
@@ -15,6 +14,7 @@ const directions = [
 ];
 
 /**
+ * @brief Find paths from spawners to deliveries and identify corridors
  * @param {BeliefSet} beliefSet
  * @returns {Array<Array<GridNode>>}
  */
@@ -84,10 +84,6 @@ function update_planner_map_info(planner, tiles) {
 
     planner.map_init_pddlstring_backup = planner.map_init_pddlstring;
     planner.objects_init_pddlstring_backup = planner.objects_init_pddlstring;
-    // console.log("Planner map init:");
-    // console.log(planner.map_init_pddlstring);
-    // console.log("Planner obj init:");
-    // console.log(planner.objects_init_pddlstring);
 }
 
 /**
@@ -107,6 +103,7 @@ export default async function onMapCallback(width, height, tiles, beliefSet, pla
         if (t.delivery) beliefSet.map.addDelivery(t);
         if (t.parcelSpawner) beliefSet.map.addSpawner(t);
     }
+    // check if there are more normal tiles than spawners
     if (beliefSet.map.tiles.size - beliefSet.map.deliveryTiles.size > beliefSet.map.spawnerTiles.size)
         beliefSet.map.moreNormalTilesThanSpawners = true;
 

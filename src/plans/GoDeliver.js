@@ -41,7 +41,7 @@ export default class GoDeliver extends Plan {
     async execute(go_deliver) {
         let deliveryTile = nearestDelivery(this.beliefSet.me, this.beliefSet.map, this.beliefSet.graph);
 
-        //   the agent with pick_up role is the master
+        // the agent with pick_up role is the master
         if (this.beliefSet.collabRole === CollabRoles.PICK_UP) {
             let x = Math.round(this.beliefSet.me.x);
             let y = Math.round(this.beliefSet.me.y);
@@ -72,6 +72,8 @@ export default class GoDeliver extends Plan {
             const msg = new Message(TopicMsgEnum.NEW_INTENTION, this.beliefSet.COMMUNICATION_KEY, intention);
             await new Say(this.beliefSet.allayId, msg).execute(this.beliefSet);
         }
+
+        if (deliveryTile === null) throw ["no path found"]; // if no path found then quit
 
         await this.subIntention(["go_to", deliveryTile.x, deliveryTile.y]);
         if (this.stopped) throw ["stopped"]; // if stopped then quit

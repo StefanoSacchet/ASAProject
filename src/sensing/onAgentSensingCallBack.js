@@ -12,6 +12,7 @@ import Say from "../plans/communicationPlans/Say.js";
 export default async function onAgentsSensingCallback(perceived_agents, beliefSet) {
     beliefSet.updateAgents(perceived_agents);
 
+    // if no agents sensed, return
     if (perceived_agents.length === 0) return;
 
     // send new agents sensed to allay

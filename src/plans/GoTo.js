@@ -49,8 +49,6 @@ export default class GoTo extends Plan {
         if (this.stopped) throw ["stopped"]; // if stopped then quit
         
         var res;
-
-        // console.log("go to", x, y);
         
         if (!this.planner.pddl) {
             // console.log("no pddl");
@@ -69,19 +67,16 @@ export default class GoTo extends Plan {
                 res = []; 
                 plan_res.forEach((action) => {
                     
-                    let temp = this.beliefSet.map.tiles.get(Number(action.args[1].replace('tile_', '')));
+                    const temp = this.beliefSet.map.tiles.get(Number(action.args[1].replace('tile_', '')));
                     res.push({x: temp.x, y: temp.y});
-                    // return this.beliefSet.map.tiles.get(action.parameters[1]);
                 });
             } catch (e) {
                 console.log(e);
                 throw ["no path found"];
             }
         }
-        // console.log(res);
-        // while(1);
 
-        if (res.length == 0 && (this.beliefSet.me.x != x || this.beliefSet.me.y != y)) throw ["no path found"]; // if no path found then quit
+        if (res.length == 0) throw ["no path found"]; // if no path found then quit
 
         let status_x = false;
         let status_y = false;
@@ -112,7 +107,7 @@ export default class GoTo extends Plan {
             if (status_y) this.beliefSet.me.y = next.y;
         }
 
-        if (this.beliefSet.me.x == x && this.beliefSet.me.y == y) return true;
+        if (this.beliefSet.me.x === x && this.beliefSet.me.y === y) return true;
         else throw ["no path found"];
     }
 }
