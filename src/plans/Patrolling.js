@@ -18,7 +18,7 @@ export default class Patrolling extends Plan {
      * @param {BeliefSet} beliefSet
      * @param {Planner} planner
      */
-    constructor(parent, beliefSet, planner=undefined) {
+    constructor(parent, beliefSet, planner = undefined) {
         super(parent, beliefSet, planner);
     }
 
@@ -159,12 +159,8 @@ export default class Patrolling extends Plan {
             }
         }
 
-        if (
-            this.beliefSet.collabRole &&
-            this.beliefSet.collabRole !== CollabRoles.DELIVER &&
-            this.beliefSet.isSingleCorridor &&
-            Patrolling.tmp
-        ) {
+        // if it's a single corridor and agent is go_pickup
+        if (this.beliefSet.collabRole !== CollabRoles.DELIVER && this.beliefSet.isSingleCorridor && Patrolling.tmp) {
             // go to a tile near spawner tile
             const directions = [
                 [0, 1],
