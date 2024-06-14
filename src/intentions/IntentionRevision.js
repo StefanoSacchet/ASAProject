@@ -159,7 +159,7 @@ export default class IntentionRevision {
                     }
                 }
 
-                if (intention.predicate[0] === "go_pick_up") {
+                if (intention.predicate[0] === "go_pick_up" && this.beliefSet.collabRole) {
                     // if parcel is being piecked up by other agent, remove intention
                     if (this.beliefSet.allayParcelsMap.has(intention.predicate[3])) {
                         if (DEBUG)
@@ -185,7 +185,7 @@ export default class IntentionRevision {
                     .achieve(this.beliefSet, this.planner)
                     // Catch eventual error and continue
                     .catch((error) => {
-                        if (DEBUG) console.log("Failed intention", ...intention.predicate, "with error:", error);
+                        if (DEBUG) console.log("Failed intention", ...intention.predicate, "with error:", ...error);
                     });
 
                 // Remove from the queue

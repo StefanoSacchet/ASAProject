@@ -105,7 +105,7 @@ export function canDeliverContentInTime(me, map, graph, config) {
     let timeToDeliver = distanceFromDeliveryTile.length * config.MOVEMENT_DURATION;
     var timeForCarriedExpiration;
     if (config) {
-        if (config.PARCEL_DECADING_INTERVAL == "infinite") {
+        if (config.PARCEL_DECADING_INTERVAL == "infinite" || config.PARCEL_DECADING_INTERVAL == "0s") {
             return true;
             timeForCarriedExpiration = timeToDeliver + 1;
         } else {
@@ -148,7 +148,7 @@ export function findBestParcel(me, parcels, config, map, graph) {
     let parcelExpirationDuration;
     let notInfinite = 1;
     // TODO set this check in the official version too
-    if (config.PARCEL_DECADING_INTERVAL == "infinite") {
+    if (config.PARCEL_DECADING_INTERVAL == "infinite" || config.PARCEL_DECADING_INTERVAL == "0s") {
         parcelExpirationDuration = 1;
         notInfinite = 0;
     } else {
@@ -209,7 +209,7 @@ export function findAndPickUpNearParcels(me, parcels, config, map, graph) {
 
         let parcelExpirationDuration,
             notInfinite = 1;
-        if (config.PARCEL_DECADING_INTERVAL == "infinite") {
+        if (config.PARCEL_DECADING_INTERVAL == "infinite" || config.PARCEL_DECADING_INTERVAL == "0s") {
             parcelExpirationDuration = 1;
             notInfinite = 0;
         } else {

@@ -22,12 +22,25 @@ export function distance({ x: x1, y: y1 }, { x: x2, y: y2 }, graph) {
  * @param {{x: number, y: number}} param
  * @param {GameMap} map
  * @param {Graph} graph
+ * @type {Map<string, AgentModel>} 
  * @returns {{x: number, y: number}}
  */
-export function nearestDelivery({ x, y }, map, graph) {
+export function nearestDelivery({ x, y }, map, graph, agents=undefined) {
     let minDistance = Infinity;
     let deliveryTile = null;
     for (const tile of map.deliveryTiles.values()) {
+        
+        if (agents && agents.size > 0) {
+            let isAgentOnDelivery = false;
+            for (const agent of agents.values()) {
+                if (agent.x == tile.x && agent.y == tile.y) {
+                    isAgentOnDelivery = true;
+                    break;
+                }
+            }
+            if (isAgentOnDelivery) continue;
+        }
+
         const d = distance({ x, y }, tile, graph);
         if (d < minDistance) {
             minDistance = d;

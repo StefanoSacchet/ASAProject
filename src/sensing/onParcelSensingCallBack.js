@@ -15,10 +15,13 @@ import Say from "../plans/communicationPlans/Say.js";
  */
 export default async function onParcelsSensingCallback(perceived_parcels, beliefSet, myAgent) {
     // remove expired parcels, add new ones and update carriedBy
+    // console.log("onParcelsSensingCallback");
+    // console.log(perceived_parcels);
+    // console.log(beliefSet.parcels);
     const { isNewParcelSensed, isCarryingEmpty } = beliefSet.updateParcels(perceived_parcels);
 
     // clear intention if carrying is empty
-    if (isCarryingEmpty && !beliefSet.isSingleCorridor) myAgent.clear();
+    if (isCarryingEmpty && !beliefSet.isSingleCorridor) await myAgent.clear();
 
     const carriedArray = getCarriedRewardAndTreshold(beliefSet.me, beliefSet.config);
     const carriedReward = carriedArray[0];
@@ -30,7 +33,7 @@ export default async function onParcelsSensingCallback(perceived_parcels, belief
     }
 
     if (beliefSet.collabRole === CollabRoles.PICK_UP && beliefSet.isSingleCorridor && !isCarryingEmpty) {
-        myAgent.clear();
+        await myAgent.clear();
         myAgent.push(["go_deliver"]);
         return;
     }
@@ -40,7 +43,7 @@ export default async function onParcelsSensingCallback(perceived_parcels, belief
     // if patrolling and new parcels are observed, clear intention
     // if (myAgent.intention_queue[0]?.predicate[0] === "patrolling") {
     //     console.log("Clearing intention queue");
-    //     myAgent.clear();
+    //     await myAgent.clear();
     // }
 
     // send new parcels sensed to allay

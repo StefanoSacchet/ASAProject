@@ -47,12 +47,39 @@ export default class GoTo extends Plan {
 
     async execute(go_to, x, y) {
         if (this.stopped) throw ["stopped"]; // if stopped then quit
+        
+        var res;
 
-        this.updateGraph();
-
-        const start = this.beliefSet.graph.grid[this.beliefSet.me.x][this.beliefSet.me.y];
-        const end = this.beliefSet.graph.grid[x][y];
-        const res = astar.search(this.beliefSet.graph, start, end); // A* search
+        // console.log("go to", x, y);
+        
+        if (!this.planner.pddl) {
+            // console.log("no pddl");
+            this.updateGraph();
+            
+            const start = this.beliefSet.graph.grid[this.beliefSet.me.x][this.beliefSet.me.y];
+            const end = this.beliefSet.graph.grid[x][y];
+            res = astar.search(this.beliefSet.graph, start, end); // A* search
+        }
+        else {
+            // console.log("pddl");
+            try {
+                await this.planner.execute(this.beliefSet, [go_to, x, y]);
+                const plan_res = this.planner.plan;
+                // console.log(plan_res);
+                res = []; 
+                plan_res.forEach((action) => {
+                    
+                    let temp = this.beliefSet.map.tiles.get(Number(action.args[1].replace('tile_', '')));
+                    res.push({x: temp.x, y: temp.y});
+                    // return this.beliefSet.map.tiles.get(action.parameters[1]);
+                });
+            } catch (e) {
+                console.log(e);
+                throw ["no path found"];
+            }
+        }
+        // console.log(res);
+        // while(1);
 
         if (res.length == 0 && (this.beliefSet.me.x != x || this.beliefSet.me.y != y)) throw ["no path found"]; // if no path found then quit
 
