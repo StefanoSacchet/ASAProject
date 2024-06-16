@@ -4,8 +4,8 @@ const name = "agent" + process.argv[2];
 
 // ste4
 const config = {
-    // host: "http://localhost:8080/?name=" + name,
-    host: "http://localhost:8080",
+    host: "http://localhost:8080/?name=" + name,
+    // host: "http://localhost:8080",
     // host: "http://rtibdi.disi.unitn.it:8080/?name=" + name,
     token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjIxYzcyYjlhN2JkIiwibmFtZSI6InN0ZTQiLCJpYXQiOjE3MTYzOTU0NjJ9.XycBKqifC-Ce7rHkFWfWM61A8R6ySeLdBMj4mqEzYwI",
 };
