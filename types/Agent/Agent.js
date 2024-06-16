@@ -70,7 +70,7 @@ export default class Agent {
         if (token === undefined) token = config.token;
         this.#apiClient = new DeliverooApi(config.host, token);
         this.#beliefSet = new BeliefSet();
-        this.#use_pddl = false; // set this value to true/false depending if usage of pddl is wanted or not
+        this.#use_pddl = true; // set this value to true/false depending if usage of pddl is wanted or not
         this.#planner = new Planner(this.#use_pddl);
         this.#beliefSet.HANDSHAKE_KEY = handShakeKey;
         this.#beliefSet.COMMUNICATION_KEY = communicationKey;
@@ -113,32 +113,34 @@ export default class Agent {
                 let tmp = [];
                 for (const delivery of this.#beliefSet.map.deliveryTiles.values()) {
                     dis = distance(this.#beliefSet.me, delivery, this.#beliefSet.graph);
-                    if (dis > 0) tmp.push(delivery);
+                    if (dis !== Infinity) tmp.push(delivery);
                 }
                 if (tmp.length > 3) break;
 
                 if (DEBUG) console.log("Number of reachable delivery tiles:", tmp.length);
 
-                // loop for every delivery tile and check if they are colse to each other
-                let nearTiles = [];
-                for (let i = 0; i < tmp.length - 1; i++) {
-                    const delivery1 = tmp[i];
-                    const delivery2 = tmp[i + 1];
-                    dis = distance(delivery1, delivery2, this.#beliefSet.graph);
-                    if (dis === 0) dis = Infinity;
-                    if (dis < 3) {
-                        nearTiles.push(delivery1);
+                // loop for every delivery tile and check if they are close to each other
+                if (!this.#beliefSet.isSingleCorridor) {
+                    let nearTiles = [];
+                    for (let i = 0; i < tmp.length - 1; i++) {
+                        const delivery1 = tmp[i];
+                        const delivery2 = tmp[i + 1];
+                        dis = distance(delivery1, delivery2, this.#beliefSet.graph);
+                        // if (dis === 0) dis = Infinity;
+                        if (dis < 3) {
+                            nearTiles.push(delivery1);
+                        }
                     }
-                }
-                // if all the delivery tiles are close to each other don't collaborate
-                if (nearTiles.length === tmp.length - 1) break;
+                    // if all the delivery tiles are close to each other don't collaborate
+                    if (nearTiles.length === tmp.length - 1) break;
 
-                if (DEBUG) console.log("Number", nearTiles.length);
+                    if (DEBUG) console.log("Number", nearTiles.length);
+                }
 
                 // calculate the agent closer to the delivery
                 const myTile = nearestDelivery(this.#beliefSet.me, this.#beliefSet.map, this.#beliefSet.graph);
                 let myDistance = distance(this.#beliefSet.me, myTile, this.#beliefSet.graph);
-                if (myDistance === 0) myDistance = Infinity;
+                // if (myDistance === 0) myDistance = Infinity;
 
                 const allayTile = nearestDelivery(
                     this.#beliefSet.allayInfo,
@@ -146,7 +148,7 @@ export default class Agent {
                     this.#beliefSet.graph
                 );
                 let allayDistance = distance(this.#beliefSet.allayInfo, allayTile, this.#beliefSet.graph);
-                if (allayDistance === 0) allayDistance = Infinity;
+                // if (allayDistance === 0) allayDistance = Infinity;
 
                 // if the two agents are at the same distance from the delivery, the one with the smallest id is the deliverer
                 const myId = this.#apiClient.id;

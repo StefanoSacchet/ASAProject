@@ -81,7 +81,7 @@ export default class Patrolling extends Plan {
      */
     makeLittleSteps(dir) {
         // make little random steps
-        const CONST = 5;
+        const CONST = 10;
         let randomTile;
         for (let i = 0; i < 5; i++) {
             const newX = this.beliefSet.me.x + Math.floor((Math.floor(Math.random() * CONST) + 1) * dir.x);
